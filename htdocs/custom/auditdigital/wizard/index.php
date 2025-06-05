@@ -91,7 +91,13 @@ if (!isModEnabled('auditdigital')) {
 
 // Load required classes
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
+
+// Try to load project form class if it exists
+if (file_exists(DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php')) {
+    require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
+} elseif (file_exists(DOL_DOCUMENT_ROOT.'/core/class/html.formproject.class.php')) {
+    require_once DOL_DOCUMENT_ROOT.'/core/class/html.formproject.class.php';
+}
 
 // Try to load our custom classes with error handling
 $classesLoaded = true;
@@ -147,10 +153,29 @@ if (isset($user->rights->auditdigital->audit->write)) {
 
 // Initialize objects with error handling
 $formcompany = new FormCompany($db);
+
+// Try to load project form class with multiple possible names
+$formproject = null;
 if (isModEnabled('project')) {
-    $formproject = new FormProjets($db);
-} else {
-    $formproject = null;
+    // Try different possible class names for project forms
+    $projectClassNames = array('FormProjets', 'FormProjet', 'FormProject');
+    
+    foreach ($projectClassNames as $className) {
+        if (class_exists($className)) {
+            try {
+                $formproject = new $className($db);
+                break;
+            } catch (Exception $e) {
+                // Continue to next class name
+                continue;
+            }
+        }
+    }
+    
+    // If no project form class found, continue without it
+    if (!$formproject) {
+        error_log("Warning: No project form class found in AuditDigital wizard");
+    }
 }
 
 $hookmanager->initHooks(array('auditdigitalwizard'));
