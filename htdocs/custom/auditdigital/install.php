@@ -108,7 +108,7 @@ if ($action == 'install') {
             $message .= "✓ ".$result." solutions loaded successfully<br>";
         }
         
-        // 3. Create directories
+        // 3. Create directories and fix permissions
         $dirs = array(
             $conf->auditdigital->dir_output,
             $conf->auditdigital->dir_output.'/audit',
@@ -119,6 +119,25 @@ if ($action == 'install') {
             if (!file_exists($dir)) {
                 if (!dol_mkdir($dir)) {
                     throw new Exception('Cannot create directory: '.$dir);
+                }
+            }
+            
+            // Fix permissions
+            if (function_exists('chmod')) {
+                @chmod($dir, 0755);
+            }
+        }
+        
+        // 4. Fix module permissions
+        $moduleDir = DOL_DOCUMENT_ROOT.'/custom/auditdigital';
+        if (function_exists('chmod') && is_dir($moduleDir)) {
+            @chmod($moduleDir, 0755);
+            // Fix permissions recursively for key directories
+            $keyDirs = array('class', 'wizard', 'admin', 'css', 'js', 'data');
+            foreach ($keyDirs as $subDir) {
+                $fullPath = $moduleDir.'/'.$subDir;
+                if (is_dir($fullPath)) {
+                    @chmod($fullPath, 0755);
                 }
             }
         }
