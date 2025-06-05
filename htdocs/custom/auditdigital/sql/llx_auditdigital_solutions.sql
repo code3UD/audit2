@@ -13,34 +13,26 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
--- Table principale des audits
-CREATE TABLE llx_auditdigital_audit (
+-- Table bibliothèque de solutions
+CREATE TABLE llx_auditdigital_solutions (
     rowid integer AUTO_INCREMENT PRIMARY KEY,
     ref varchar(128) NOT NULL UNIQUE,
     label varchar(255) NOT NULL,
-    audit_type varchar(50) NOT NULL,
-    structure_type varchar(50) NOT NULL, -- 'tpe_pme' ou 'collectivite'
-    fk_soc integer NOT NULL,
-    fk_projet integer,
+    category varchar(100) NOT NULL,
+    sub_category varchar(100),
+    solution_type varchar(100) NOT NULL,
+    target_audience varchar(100), -- 'tpe', 'pme', 'collectivite', 'all'
+    price_range varchar(50), -- '5k', '10k', '15k', '20k'
+    implementation_time integer, -- en jours
+    priority integer DEFAULT 0,
+    roi_percentage integer,
+    roi_months integer,
+    json_features text,
+    json_benefits text,
+    json_requirements text,
+    description text,
+    active integer DEFAULT 1,
     date_creation datetime NOT NULL,
-    date_audit datetime,
-    date_valid datetime,
-    fk_user_creat integer NOT NULL,
-    fk_user_valid integer,
-    status integer DEFAULT 0, -- 0:brouillon, 1:validé, 2:envoyé
-    score_global integer,
-    score_maturite integer,
-    score_cybersecurite integer,
-    score_cloud integer,
-    score_automatisation integer,
-    json_config text,
-    json_responses text,
-    json_recommendations text,
-    note_private text,
-    note_public text,
-    model_pdf varchar(255) DEFAULT 'standard',
     entity integer DEFAULT 1,
-    import_key varchar(14),
     tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
-

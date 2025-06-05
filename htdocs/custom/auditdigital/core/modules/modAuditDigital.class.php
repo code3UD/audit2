@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2024 AuditDigital Module
+/* Copyright (C) 2024 Up Digit Agency
  *
- * This program is free software; you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -12,15 +12,17 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 /**
+ * \defgroup   auditdigital     Module AuditDigital
+ * \brief      AuditDigital module descriptor.
+ *
  * \file       htdocs/custom/auditdigital/core/modules/modAuditDigital.class.php
  * \ingroup    auditdigital
  * \brief      Description and activation file for module AuditDigital
  */
-
 include_once DOL_DOCUMENT_ROOT.'/core/modules/DolibarrModules.class.php';
 
 /**
@@ -46,7 +48,7 @@ class modAuditDigital extends DolibarrModules
 
         // Family can be 'base' (core modules),'crm','financial','hr','projects','products','ecm','technic' (transverse modules),'interface' (interface modules),'other','...
         // It is used to group modules by family in module setup page
-        $this->family = "crm";
+        $this->family = "projects";
 
         // Module position in the family on 2 digits ('01', '10', '20', ...)
         $this->module_position = '90';
@@ -57,13 +59,13 @@ class modAuditDigital extends DolibarrModules
         $this->name = preg_replace('/^mod/i', '', get_class($this));
 
         // Module description, used if translation string 'ModuleAuditDigitalDesc' not found (AuditDigital is name of module).
-        $this->description = "Module pour réaliser des audits de maturité numérique";
+        $this->description = "Module d'audit de maturité numérique pour TPE/PME et collectivités";
         // Used only if file README.md and README-LL.md not found.
-        $this->descriptionlong = "Module AuditDigital permet de créer des audits de maturité numérique avec wizard, génération PDF et propositions commerciales";
+        $this->descriptionlong = "Module complet d'audit de maturité numérique permettant de réaliser des audits pour TPE/PME et collectivités territoriales avec génération de PDF et propositions commerciales intégrées.";
 
         // Author
-        $this->editor_name = 'AuditDigital';
-        $this->editor_url = '';
+        $this->editor_name = 'Up Digit Agency';
+        $this->editor_url = 'https://updigit.fr';
 
         // Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated' or a version string like 'x.y.z'
         $this->version = '1.0.0';
@@ -77,12 +79,12 @@ class modAuditDigital extends DolibarrModules
         // If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
         // If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
         // To use a supported fa-xxx css style of font awesome, use this->picto='xxx'
-        $this->picto = 'fa-chart-line';
+        $this->picto = 'auditdigital@auditdigital';
 
         // Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
         $this->module_parts = array(
             // Set this to 1 if module has its own trigger directory (core/triggers)
-            'triggers' => 0,
+            'triggers' => 1,
             // Set this to 1 if module has its own login method file (core/login)
             'login' => 0,
             // Set this to 1 if module has its own substitution function file (core/substitutions)
@@ -107,13 +109,13 @@ class modAuditDigital extends DolibarrModules
             'js' => array(
                 '/auditdigital/js/wizard.js',
             ),
-            // Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
+            // Set here all hooks context managed by module. To find available hook context, make a "grep -r '>executeHooks(' *" on source code. You can also set hook context to 'all'
             'hooks' => array(
-                //   'data' => array(
-                //       'hookcontext1',
-                //       'hookcontext2',
-                //   ),
-                //   'entity' => '0',
+                'data' => array(
+                    'thirdpartycard',
+                    'projectcard',
+                ),
+                'entity' => '0',
             ),
             // Set this to 1 if features of module are opened to external users
             'moduleforexternal' => 0,
@@ -121,7 +123,7 @@ class modAuditDigital extends DolibarrModules
 
         // Data directories to create when module is enabled.
         // Example: this->dirs = array("/auditdigital/temp","/auditdigital/subdir");
-        $this->dirs = array("/auditdigital/temp");
+        $this->dirs = array("/auditdigital");
 
         // Config pages. Put here list of php page, stored into auditdigital/admin directory, to use to setup module.
         $this->config_page_url = array("setup.php@auditdigital");
@@ -130,7 +132,7 @@ class modAuditDigital extends DolibarrModules
         // A condition to hide module
         $this->hidden = false;
         // List of module class names as string that must be enabled if this module is enabled. Example: array('always1'=>'modModuleToEnable1','always2'=>'modModuleToEnable2', 'FR'=>'modModuleToEnableFR'...)
-        $this->depends = array();
+        $this->depends = array('modSociete', 'modProjet');
         $this->requiredby = array(); // List of module class names as string to disable if this one is disabled. Example: array('modModuleToDisable1', ...)
         $this->conflictwith = array(); // List of module class names as string this module is in conflict with. Example: array('modModuleToDisable1', ...)
 
@@ -153,7 +155,8 @@ class modAuditDigital extends DolibarrModules
         //                             2 => array('AUDITDIGITAL_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
         // );
         $this->const = array(
-            1 => array('AUDITDIGITAL_MYNEWCONST1', 'chaine', 'avalue', 'This is a constant to add', 1),
+            1 => array('AUDITDIGITAL_MYPARAM1', 'chaine', 'avalue', 'A parameter for AuditDigital', 0),
+            2 => array('AUDITDIGITAL_MYPARAM2', 'chaine', 'avalue', 'Another parameter for AuditDigital', 0),
         );
 
         // Some keys to add into the overwriting translation tables
@@ -261,17 +264,17 @@ class modAuditDigital extends DolibarrModules
         // Add here entries to declare new permissions
         // Example:
         $this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-        $this->rights[$r][1] = 'Lire les audits'; // Permission label
+        $this->rights[$r][1] = 'Read objects of AuditDigital'; // Permission label
         $this->rights[$r][4] = 'audit';
         $this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->auditdigital->audit->read)
         $r++;
         $this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-        $this->rights[$r][1] = 'Créer/modifier les audits'; // Permission label
+        $this->rights[$r][1] = 'Create/Update objects of AuditDigital'; // Permission label
         $this->rights[$r][4] = 'audit';
         $this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->auditdigital->audit->write)
         $r++;
         $this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-        $this->rights[$r][1] = 'Supprimer les audits'; // Permission label
+        $this->rights[$r][1] = 'Delete objects of AuditDigital'; // Permission label
         $this->rights[$r][4] = 'audit';
         $this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->auditdigital->audit->delete)
         $r++;
@@ -289,7 +292,7 @@ class modAuditDigital extends DolibarrModules
             'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
             'mainmenu'=>'auditdigital',
             'leftmenu'=>'',
-            'url'=>'/auditdigital/auditindex.php',
+            'url'=>'/auditdigital/wizard/index.php',
             'langs'=>'auditdigital@auditdigital', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
             'position'=>1000 + $r,
             'enabled'=>'$conf->auditdigital->enabled', // Define condition to show or hide menu entry. Use '$conf->auditdigital->enabled' if entry must be visible if module is enabled.
@@ -300,28 +303,28 @@ class modAuditDigital extends DolibarrModules
         $this->menu[$r++] = array(
             'fk_menu'=>'fk_mainmenu=auditdigital', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
             'type'=>'left', // This is a Left menu entry
-            'titre'=>'Liste des audits',
+            'titre'=>'NewAudit',
             'mainmenu'=>'auditdigital',
             'leftmenu'=>'auditdigital_audit',
-            'url'=>'/auditdigital/auditindex.php',
-            'langs'=>'auditdigital@auditdigital', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-            'position'=>1000 + $r,
-            'enabled'=>'$conf->auditdigital->enabled', // Define condition to show or hide menu entry. Use '$conf->auditdigital->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\"system\"' to show if leftmenu system is selected.
-            'perms'=>'$user->rights->auditdigital->audit->read', // Use 'perms'=>'$user->rights->auditdigital->level1->level2' if you want your menu with a permission rules
-            'target'=>'',
-            'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
-        );
-        $this->menu[$r++] = array(
-            'fk_menu'=>'fk_mainmenu=auditdigital,fk_leftmenu=auditdigital_audit', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'type'=>'left', // This is a Left menu entry
-            'titre'=>'Nouvel audit',
-            'mainmenu'=>'auditdigital',
-            'leftmenu'=>'auditdigital_audit_new',
-            'url'=>'/auditdigital/auditcard.php?action=create',
+            'url'=>'/auditdigital/wizard/index.php',
             'langs'=>'auditdigital@auditdigital', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
             'position'=>1000 + $r,
             'enabled'=>'$conf->auditdigital->enabled', // Define condition to show or hide menu entry. Use '$conf->auditdigital->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\"system\"' to show if leftmenu system is selected.
             'perms'=>'$user->rights->auditdigital->audit->write', // Use 'perms'=>'$user->rights->auditdigital->level1->level2' if you want your menu with a permission rules
+            'target'=>'',
+            'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
+        );
+        $this->menu[$r++] = array(
+            'fk_menu'=>'fk_mainmenu=auditdigital', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+            'type'=>'left', // This is a Left menu entry
+            'titre'=>'AuditList',
+            'mainmenu'=>'auditdigital',
+            'leftmenu'=>'auditdigital_audit_list',
+            'url'=>'/auditdigital/audit_list.php',
+            'langs'=>'auditdigital@auditdigital', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'position'=>1000 + $r,
+            'enabled'=>'$conf->auditdigital->enabled', // Define condition to show or hide menu entry. Use '$conf->auditdigital->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\"system\"' to show if leftmenu system is selected.
+            'perms'=>'$user->rights->auditdigital->audit->read', // Use 'perms'=>'$user->rights->auditdigital->level1->level2' if you want your menu with a permission rules
             'target'=>'',
             'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
         );
