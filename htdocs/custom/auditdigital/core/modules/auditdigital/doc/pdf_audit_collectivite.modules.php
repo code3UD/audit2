@@ -59,6 +59,7 @@ if (!class_exists('ModelePDFAudit')) {
         public $marge_droite;
         public $marge_haute;
         public $marge_basse;
+        public $scandir;
         
         public function __construct($db)
         {
@@ -155,6 +156,11 @@ class pdf_audit_collectivite extends ModelePDFAudit
     public $marge_basse;
 
     /**
+     * @var string scandir
+     */
+    public $scandir;
+
+    /**
      * Issuer
      * @var Societe Object that emits
      */
@@ -187,6 +193,8 @@ class pdf_audit_collectivite extends ModelePDFAudit
         $this->marge_droite = isset($conf->global->MAIN_PDF_MARGIN_RIGHT) ? $conf->global->MAIN_PDF_MARGIN_RIGHT : 10;
         $this->marge_haute = isset($conf->global->MAIN_PDF_MARGIN_TOP) ? $conf->global->MAIN_PDF_MARGIN_TOP : 10;
         $this->marge_basse = isset($conf->global->MAIN_PDF_MARGIN_BOTTOM) ? $conf->global->MAIN_PDF_MARGIN_BOTTOM : 10;
+
+        $this->scandir = DOL_DOCUMENT_ROOT.'/custom/auditdigital/core/modules/auditdigital/doc/';
 
         $this->option_logo = 1; // Display logo
         $this->option_tva = 1; // Manage the vat option FACTURE_TVAOPTION

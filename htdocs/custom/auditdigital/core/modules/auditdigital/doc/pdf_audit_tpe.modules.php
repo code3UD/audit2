@@ -59,6 +59,7 @@ if (!class_exists('ModelePDFAudit')) {
         public $marge_droite;
         public $marge_haute;
         public $marge_basse;
+        public $scandir;
         
         public function __construct($db)
         {
@@ -73,6 +74,7 @@ if (!class_exists('ModelePDFAudit')) {
             $this->marge_droite = 10;
             $this->marge_haute = 10;
             $this->marge_basse = 10;
+            $this->scandir = DOL_DOCUMENT_ROOT.'/custom/auditdigital/core/modules/auditdigital/doc/';
         }
         
         public function write_file($object, $outputlangs, $srctemplatepath = '', $hidedetails = 0, $hidedesc = 0, $hideref = 0)

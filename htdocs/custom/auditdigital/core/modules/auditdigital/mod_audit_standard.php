@@ -21,7 +21,7 @@
  * \brief      File containing class for standard audit numbering module
  */
 
-require_once DOL_DOCUMENT_ROOT.'/core/modules/auditdigital/modules_audit.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/auditdigital/core/modules/auditdigital/modules_audit.php';
 
 /**
  * Class to manage audit numbering rules standard
