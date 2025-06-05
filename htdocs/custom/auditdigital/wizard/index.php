@@ -24,11 +24,11 @@
 // Load Dolibarr environment
 $res = 0;
 
-// Méthode 1: Chemins relatifs standards
+// Méthode 1: Chemins relatifs standards (ordre optimisé selon votre configuration)
 $paths_to_try = array(
-    "../main.inc.php",
-    "../../main.inc.php", 
+    "../../main.inc.php",      // Chemin correct pour votre installation
     "../../../main.inc.php",
+    "../main.inc.php",
     "../../../../main.inc.php",
     "../../../../../main.inc.php"
 );
