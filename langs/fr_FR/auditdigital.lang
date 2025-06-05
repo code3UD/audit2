@@ -1,0 +1,238 @@
+# Copyright (C) 2024 Up Digit Agency
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module labels 'ModuleXXXName'
+Module500100Name = Audit Digital
+Module500100Desc = Module d'audit de maturité numérique pour TPE/PME et collectivités
+
+# Admin page
+AuditDigitalSetup = Configuration du module Audit Digital
+Settings = Réglages
+AuditDigitalSetupPage = Page de configuration du module Audit Digital
+
+# About page
+About = À propos
+AuditDigitalAbout = À propos d'Audit Digital
+AuditDigitalAboutPage = Page à propos d'Audit Digital
+
+# Main menu
+AuditDigital = Audit Digital
+NewAudit = Nouvel audit
+AuditList = Liste des audits
+AuditCard = Fiche audit
+CreateAudit = Créer un audit
+ModifyAudit = Modifier l'audit
+DeleteAudit = Supprimer l'audit
+ValidateAudit = Valider l'audit
+GeneratePDF = Générer le PDF
+SendByEmail = Envoyer par email
+
+# Audit object
+Audit = Audit
+Audits = Audits
+AuditSingular = Audit
+AuditPlural = Audits
+NewAuditCreated = Nouvel audit créé
+AuditModified = Audit modifié
+AuditDeleted = Audit supprimé
+AuditValidated = Audit validé
+AuditSent = Audit envoyé
+
+# Fields
+Ref = Référence
+Label = Libellé
+AuditType = Type d'audit
+StructureType = Type de structure
+ThirdParty = Tiers
+Project = Projet
+DateCreation = Date de création
+DateAudit = Date d'audit
+DateValidation = Date de validation
+UserAuthor = Auteur
+UserValidation = Validateur
+Status = Statut
+GlobalScore = Score global
+MaturityScore = Score de maturité
+CybersecurityScore = Score cybersécurité
+CloudScore = Score cloud
+AutomationScore = Score automatisation
+Configuration = Configuration
+Responses = Réponses
+Recommendations = Recommandations
+NotePrivate = Note privée
+NotePublic = Note publique
+Model = Modèle
+
+# Status
+Draft = Brouillon
+Validated = Validé
+Sent = Envoyé
+
+# Wizard steps
+Step1General = Étape 1 - Informations générales
+Step2Maturity = Étape 2 - Maturité numérique
+Step3Cybersecurity = Étape 3 - Cybersécurité
+Step4Cloud = Étape 4 - Cloud et infrastructure
+Step5Automation = Étape 5 - Automatisation
+Step6Synthesis = Étape 6 - Synthèse et recommandations
+
+# Structure types
+TPE_PME = TPE/PME
+Collectivite = Collectivité
+
+# Audit types
+DigitalMaturity = Maturité numérique
+Cybersecurity = Cybersécurité
+CloudReadiness = Préparation cloud
+
+# Scores and levels
+ScoreExcellent = Excellent (80-100%)
+ScoreGood = Bon (60-79%)
+ScoreAverage = Moyen (40-59%)
+ScorePoor = Faible (20-39%)
+ScoreCritical = Critique (0-19%)
+
+# Solutions
+Solution = Solution
+Solutions = Solutions
+SolutionLibrary = Bibliothèque de solutions
+RecommendedSolutions = Solutions recommandées
+EstimatedROI = ROI estimé
+ImplementationTime = Temps de mise en œuvre
+Priority = Priorité
+Category = Catégorie
+SubCategory = Sous-catégorie
+SolutionType = Type de solution
+TargetAudience = Public cible
+PriceRange = Gamme de prix
+Features = Fonctionnalités
+Benefits = Bénéfices
+Requirements = Prérequis
+Description = Description
+Active = Actif
+
+# Categories
+MaturityCategory = Maturité numérique
+CybersecurityCategory = Cybersécurité
+CloudCategory = Cloud
+AutomationCategory = Automatisation
+
+# Target audiences
+TPE = TPE
+PME = PME
+Collectivity = Collectivité
+All = Tous
+
+# Price ranges
+Under5k = < 5k€
+From5to10k = 5-10k€
+From10to15k = 10-15k€
+From15to20k = 15-20k€
+Over20k = > 20k€
+
+# PDF Generation
+PDFGenerated = PDF généré avec succès
+PDFGenerationError = Erreur lors de la génération du PDF
+DownloadPDF = Télécharger le PDF
+
+# Email
+EmailSent = Email envoyé avec succès
+EmailSendError = Erreur lors de l'envoi de l'email
+EmailSubject = Rapport d'audit digital - %s
+EmailBody = Veuillez trouver en pièce jointe votre rapport d'audit digital.
+
+# Errors
+ErrorAuditNotFound = Audit non trouvé
+ErrorInvalidStep = Étape invalide
+ErrorMissingData = Données manquantes
+ErrorPermissionDenied = Permission refusée
+ErrorDatabaseConnection = Erreur de connexion à la base de données
+
+# Success messages
+AuditCreatedSuccessfully = Audit créé avec succès
+AuditUpdatedSuccessfully = Audit mis à jour avec succès
+AuditDeletedSuccessfully = Audit supprimé avec succès
+AuditValidatedSuccessfully = Audit validé avec succès
+
+# Questionnaire
+GeneralInformation = Informations générales
+DigitalMaturityAssessment = Évaluation de la maturité numérique
+CybersecurityAssessment = Évaluation de la cybersécurité
+CloudInfrastructureAssessment = Évaluation cloud et infrastructure
+AutomationAssessment = Évaluation de l'automatisation
+
+# Questions labels
+StructureTypeQuestion = Type de structure
+SectorQuestion = Secteur d'activité
+EmployeesCountQuestion = Nombre d'employés
+ITBudgetQuestion = Budget IT annuel
+MainObjectivesQuestion = Objectifs principaux
+
+WebsitePresenceQuestion = Présence web
+SocialMediaQuestion = Présence sur les réseaux sociaux
+CollaborativeToolsQuestion = Outils collaboratifs utilisés
+ProcessDigitalizationQuestion = Niveau de digitalisation des processus
+TeamTrainingQuestion = Formation des équipes au numérique
+
+PasswordPolicyQuestion = Politique de mots de passe
+BackupStrategyQuestion = Stratégie de sauvegarde
+AntivirusFirewallQuestion = Protection antivirus/firewall
+SecurityTrainingQuestion = Formation cybersécurité des équipes
+GDPRComplianceQuestion = Conformité RGPD
+
+CurrentHostingQuestion = Hébergement actuel
+CloudServicesQuestion = Services cloud utilisés
+StorageNeedsQuestion = Besoins en stockage
+RemoteWorkQuestion = Capacité de télétravail
+NetworkPerformanceQuestion = Performance réseau
+
+ManualProcessesQuestion = Processus manuels identifiés
+AutomationToolsQuestion = Outils d'automatisation existants
+IntegrationNeedsQuestion = Intégrations souhaitées
+TimeSavingsQuestion = Gains de temps recherchés
+AutomationBudgetQuestion = Budget automatisation
+
+# Navigation
+Previous = Précédent
+Next = Suivant
+Finish = Terminer
+Save = Enregistrer
+Cancel = Annuler
+Back = Retour
+
+# Dashboard
+Dashboard = Tableau de bord
+AuditsSummary = Résumé des audits
+RecentAudits = Audits récents
+AuditsInProgress = Audits en cours
+CompletedAudits = Audits terminés
+AverageScore = Score moyen
+
+# Reports
+Report = Rapport
+Reports = Rapports
+GenerateReport = Générer un rapport
+ExportExcel = Exporter en Excel
+ExportPDF = Exporter en PDF
+
+# Help
+Help = Aide
+Documentation = Documentation
+Support = Support
+ContactUs = Nous contacter
