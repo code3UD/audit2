@@ -131,9 +131,16 @@ include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 $object->fields = dol_sort_array($object->fields, 'position');
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
-// Security check
-if (!$user->rights->auditdigital->audit->read) {
-    accessforbidden();
+// Security check - use basic permission if module permissions not available
+if (isset($user->rights->auditdigital->audit->read)) {
+    if (!$user->rights->auditdigital->audit->read) {
+        accessforbidden();
+    }
+} else {
+    // Fallback to basic user check
+    if (!$user->id || $user->socid > 0) {
+        accessforbidden();
+    }
 }
 
 // Restrict access to own records only
