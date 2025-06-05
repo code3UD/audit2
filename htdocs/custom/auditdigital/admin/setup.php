@@ -99,7 +99,7 @@ if ($useFormSetup && (float) DOL_VERSION >= 15.0) {
 
     // Setup conf AUDITDIGITAL_MYPARAM4 (constant type)
     $item = $formSetup->newItem('AUDITDIGITAL_MYPARAM4');
-    $item->setAsEmailTemplate();
+    $item->setAsEmailTemplate("auditdigital");
     $item->nameText = $langs->trans('AuditDigitalParam4Label');
     $item->helpText = $langs->trans('AuditDigitalParam4Help');
 
