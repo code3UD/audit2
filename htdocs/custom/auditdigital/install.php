@@ -59,7 +59,24 @@ if ($action == 'install') {
     $db->begin();
     
     try {
-        // 1. Set default configuration
+        // 1. Activate required modules first
+        $requiredModules = array(
+            'MAIN_MODULE_PROJET' => '1',  // Projects module
+            'MAIN_MODULE_SOCIETE' => '1'  // Third parties module
+        );
+        
+        foreach ($requiredModules as $module => $value) {
+            $sql = "INSERT INTO ".MAIN_DB_PREFIX."const (name, value, type, entity, visible) ";
+            $sql .= "VALUES ('".$db->escape($module)."', '".$db->escape($value)."', 'chaine', 1, 0) ";
+            $sql .= "ON DUPLICATE KEY UPDATE value = '".$db->escape($value)."'";
+            
+            $result = $db->query($sql);
+            if (!$result) {
+                throw new Exception('Error activating module: '.$module);
+            }
+        }
+        
+        // 2. Set default configuration
         $configs = array(
             'AUDITDIGITAL_AUDIT_MASK' => 'AUD{yyyy}{mm}{dd}-{####}',
             'AUDIT_ADDON_PDF' => 'audit_tpe',
