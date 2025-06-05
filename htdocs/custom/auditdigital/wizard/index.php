@@ -148,7 +148,7 @@ if (isset($user->rights->auditdigital->audit->write)) {
 // Initialize objects with error handling
 $formcompany = new FormCompany($db);
 if (isModEnabled('project')) {
-    $formproject = new FormProject($db);
+    $formproject = new FormProjets($db);
 } else {
     $formproject = null;
 }
