@@ -127,25 +127,7 @@ if ($action == 'create_audit') {
         $audit->ref = 'AUDIT-'.date('YmdHis');
         $audit->label = 'Audit Digital - '.date('d/m/Y');
         $audit->audit_type = 'digital_maturity'; // Type d'audit par défaut
-        // Correction fk_soc
-        $fk_soc = $wizard_data['step_1']['audit_socid'] ?? 0;
-        if (empty($fk_soc) || $fk_soc <= 0) {
-            require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
-            $societe = new Societe($db);
-            $societe->name = 'Audit Digital - ' . date('Y-m-d H:i:s');
-            $societe->client = 1;
-            $societe->status = 1;
-            $societe->country_id = 1;
-            $result_soc = $societe->create($user);
-            if ($result_soc > 0) {
-                $fk_soc = $result_soc;
-                setEventMessages('Société créée automatiquement: ' . $societe->name, null, 'warnings');
-            } else {
-                setEventMessages('Erreur création société par défaut', $societe->errors, 'errors');
-                $error++;
-            }
-        }
-        $audit->fk_soc = $fk_soc;
+        $audit->fk_soc = $wizard_data['step_1']['audit_socid'] ?? 0;
         $audit->structure_type = $wizard_data['step_1']['audit_structure_type'] ?? '';
         $audit->sector = $wizard_data['step_1']['audit_sector'] ?? '';
         $audit->employees_count = $wizard_data['step_1']['audit_employees_count'] ?? '';
@@ -3539,13 +3521,6 @@ function exportToPDF() {
         input.value = data[key];
         form.appendChild(input);
     });
-    
-    // Ajouter le token CSRF
-    const tokenInput = document.createElement('input');
-    tokenInput.type = 'hidden';
-    tokenInput.name = 'token';
-    tokenInput.value = '<?php echo newToken(); ?>';
-    form.appendChild(tokenInput);
     
     document.body.appendChild(form);
     form.submit();
