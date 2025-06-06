@@ -73,7 +73,7 @@ function auditdigitalAdminPrepareHead()
  */
 function audit_prepare_head($object)
 {
-    global $db, $langs, $conf;
+    global $db, $langs, $conf, $user;
 
     $langs->load("auditdigital@auditdigital");
 
