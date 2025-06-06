@@ -1128,4 +1128,448 @@ class Audit extends CommonObject
 
         return $recommendations;
     }
+
+    /**
+     * Calculate ROI potential based on suggested improvements
+     *
+     * @param array $recommendations Array of recommendations
+     * @return array ROI analysis with total ROI and breakdown by category
+     */
+    public function calculateROI($recommendations = array())
+    {
+        // ROI data based on industry studies and best practices
+        $improvementROI = array(
+            'cloud_migration' => array(
+                'cost' => 50000,
+                'annual_savings' => 15000,
+                'payback_period' => 36, // months
+                'risk_reduction' => 80 // percentage
+            ),
+            'automation' => array(
+                'cost' => 30000,
+                'annual_savings' => 25000,
+                'payback_period' => 14, // months
+                'productivity_gain' => 40 // percentage
+            ),
+            'security_upgrade' => array(
+                'cost' => 20000,
+                'annual_savings' => 8000,
+                'payback_period' => 30, // months
+                'risk_reduction' => 90 // percentage
+            ),
+            'digital_transformation' => array(
+                'cost' => 40000,
+                'annual_savings' => 18000,
+                'payback_period' => 26, // months
+                'revenue_increase' => 15 // percentage
+            ),
+            'infrastructure_modernization' => array(
+                'cost' => 35000,
+                'annual_savings' => 12000,
+                'payback_period' => 35, // months
+                'efficiency_gain' => 25 // percentage
+            )
+        );
+
+        $roiAnalysis = array(
+            'total_investment' => 0,
+            'total_annual_savings' => 0,
+            'average_payback_period' => 0,
+            'three_year_roi' => 0,
+            'breakdown' => array(),
+            'quick_wins' => array(),
+            'medium_term' => array(),
+            'long_term' => array()
+        );
+
+        $totalInvestment = 0;
+        $totalAnnualSavings = 0;
+        $weightedPaybackPeriod = 0;
+
+        // If no recommendations provided, use current audit scores to estimate
+        if (empty($recommendations)) {
+            $scores = $this->calculateScores();
+            
+            // Estimate improvements needed based on scores
+            if ($scores['security'] < 60) {
+                $recommendations['security'] = array('type' => 'security_upgrade');
+            }
+            if ($scores['cloud'] < 50) {
+                $recommendations['cloud'] = array('type' => 'cloud_migration');
+            }
+            if ($scores['automation'] < 40) {
+                $recommendations['automation'] = array('type' => 'automation');
+            }
+            if ($scores['digital'] < 70) {
+                $recommendations['digital'] = array('type' => 'digital_transformation');
+            }
+        }
+
+        foreach ($recommendations as $category => $recommendation) {
+            $type = is_array($recommendation) ? $recommendation['type'] : $recommendation;
+            
+            if (isset($improvementROI[$type])) {
+                $roi = $improvementROI[$type];
+                
+                $investment = $roi['cost'];
+                $annualSavings = $roi['annual_savings'];
+                $paybackPeriod = $roi['payback_period'];
+                
+                // Calculate 3-year ROI
+                $threeYearSavings = $annualSavings * 3;
+                $threeYearROI = (($threeYearSavings - $investment) / $investment) * 100;
+                
+                $roiAnalysis['breakdown'][$category] = array(
+                    'type' => $type,
+                    'investment' => $investment,
+                    'annual_savings' => $annualSavings,
+                    'payback_period' => $paybackPeriod,
+                    'three_year_roi' => round($threeYearROI, 2),
+                    'priority' => $this->calculatePriority($threeYearROI, $paybackPeriod, $investment)
+                );
+                
+                // Categorize by timeline
+                if ($paybackPeriod <= 12) {
+                    $roiAnalysis['quick_wins'][] = $category;
+                } elseif ($paybackPeriod <= 24) {
+                    $roiAnalysis['medium_term'][] = $category;
+                } else {
+                    $roiAnalysis['long_term'][] = $category;
+                }
+                
+                $totalInvestment += $investment;
+                $totalAnnualSavings += $annualSavings;
+                $weightedPaybackPeriod += $paybackPeriod * $investment;
+            }
+        }
+
+        $roiAnalysis['total_investment'] = $totalInvestment;
+        $roiAnalysis['total_annual_savings'] = $totalAnnualSavings;
+        $roiAnalysis['average_payback_period'] = $totalInvestment > 0 ? round($weightedPaybackPeriod / $totalInvestment, 1) : 0;
+        
+        // Calculate overall 3-year ROI
+        if ($totalInvestment > 0) {
+            $totalThreeYearSavings = $totalAnnualSavings * 3;
+            $roiAnalysis['three_year_roi'] = round((($totalThreeYearSavings - $totalInvestment) / $totalInvestment) * 100, 2);
+        }
+
+        return $roiAnalysis;
+    }
+
+    /**
+     * Calculate priority score for a recommendation
+     *
+     * @param float $roi ROI percentage
+     * @param int $paybackPeriod Payback period in months
+     * @param int $investment Investment amount
+     * @return int Priority score (0-100)
+     */
+    private function calculatePriority($roi, $paybackPeriod, $investment)
+    {
+        // Priority calculation based on ROI, payback period, and investment size
+        $roiScore = min($roi / 2, 50); // Max 50 points for ROI
+        $paybackScore = max(0, 30 - ($paybackPeriod / 2)); // Max 30 points for quick payback
+        $investmentScore = max(0, 20 - ($investment / 5000)); // Max 20 points for lower investment
+        
+        return round($roiScore + $paybackScore + $investmentScore);
+    }
+
+    /**
+     * Generate implementation roadmap based on priorities and dependencies
+     *
+     * @param array $recommendations Array of recommendations
+     * @return array Roadmap with phases and timelines
+     */
+    public function generateRoadmap($recommendations = array())
+    {
+        $roadmap = array(
+            'phase1_quick_wins' => array(
+                'title' => 'Phase 1 : Actions rapides (1-3 mois)',
+                'description' => 'Améliorations à impact rapide et ROI élevé',
+                'duration' => '1-3 mois',
+                'actions' => array(),
+                'total_investment' => 0,
+                'expected_savings' => 0
+            ),
+            'phase2_medium_term' => array(
+                'title' => 'Phase 2 : Projets structurants (3-12 mois)',
+                'description' => 'Transformations importantes avec impact significatif',
+                'duration' => '3-12 mois',
+                'actions' => array(),
+                'total_investment' => 0,
+                'expected_savings' => 0
+            ),
+            'phase3_long_term' => array(
+                'title' => 'Phase 3 : Vision long terme (12+ mois)',
+                'description' => 'Innovations et optimisations avancées',
+                'duration' => '12+ mois',
+                'actions' => array(),
+                'total_investment' => 0,
+                'expected_savings' => 0
+            )
+        );
+
+        // Get ROI analysis to determine priorities
+        $roiAnalysis = $this->calculateROI($recommendations);
+
+        // Categorize actions by priority and effort
+        foreach ($roiAnalysis['breakdown'] as $category => $analysis) {
+            $action = array(
+                'category' => $category,
+                'type' => $analysis['type'],
+                'investment' => $analysis['investment'],
+                'annual_savings' => $analysis['annual_savings'],
+                'payback_period' => $analysis['payback_period'],
+                'roi' => $analysis['three_year_roi'],
+                'priority' => $analysis['priority']
+            );
+
+            // Determine phase based on priority and payback period
+            if ($analysis['priority'] > 80 && $analysis['payback_period'] <= 6) {
+                $roadmap['phase1_quick_wins']['actions'][] = $action;
+                $roadmap['phase1_quick_wins']['total_investment'] += $analysis['investment'];
+                $roadmap['phase1_quick_wins']['expected_savings'] += $analysis['annual_savings'];
+            } elseif ($analysis['priority'] > 50 && $analysis['payback_period'] <= 18) {
+                $roadmap['phase2_medium_term']['actions'][] = $action;
+                $roadmap['phase2_medium_term']['total_investment'] += $analysis['investment'];
+                $roadmap['phase2_medium_term']['expected_savings'] += $analysis['annual_savings'];
+            } else {
+                $roadmap['phase3_long_term']['actions'][] = $action;
+                $roadmap['phase3_long_term']['total_investment'] += $analysis['investment'];
+                $roadmap['phase3_long_term']['expected_savings'] += $analysis['annual_savings'];
+            }
+        }
+
+        // Sort actions within each phase by priority
+        foreach ($roadmap as &$phase) {
+            if (!empty($phase['actions'])) {
+                usort($phase['actions'], function($a, $b) {
+                    return $b['priority'] - $a['priority'];
+                });
+            }
+        }
+
+        return $roadmap;
+    }
+
+    /**
+     * Generate executive summary for the audit
+     *
+     * @return array Executive summary with key insights
+     */
+    public function generateExecutiveSummary()
+    {
+        $scores = $this->calculateScores();
+        $roiAnalysis = $this->calculateROI();
+        $roadmap = $this->generateRoadmap();
+
+        $summary = array(
+            'global_score' => $scores['global'],
+            'maturity_level' => $this->getMaturityLevel($scores['global']),
+            'key_strengths' => array(),
+            'critical_areas' => array(),
+            'top_priorities' => array(),
+            'investment_summary' => array(
+                'total_investment' => $roiAnalysis['total_investment'],
+                'annual_savings' => $roiAnalysis['total_annual_savings'],
+                'payback_period' => $roiAnalysis['average_payback_period'],
+                'three_year_roi' => $roiAnalysis['three_year_roi']
+            ),
+            'quick_wins' => count($roiAnalysis['quick_wins']),
+            'implementation_timeline' => $this->getImplementationTimeline($roadmap)
+        );
+
+        // Identify strengths (scores > 70)
+        foreach ($scores as $category => $score) {
+            if ($category != 'global' && $score >= 70) {
+                $summary['key_strengths'][] = array(
+                    'category' => $category,
+                    'score' => $score,
+                    'label' => $this->getCategoryLabel($category)
+                );
+            }
+        }
+
+        // Identify critical areas (scores < 50)
+        foreach ($scores as $category => $score) {
+            if ($category != 'global' && $score < 50) {
+                $summary['critical_areas'][] = array(
+                    'category' => $category,
+                    'score' => $score,
+                    'label' => $this->getCategoryLabel($category),
+                    'urgency' => $score < 30 ? 'high' : 'medium'
+                );
+            }
+        }
+
+        // Get top 3 priorities from roadmap
+        $allActions = array();
+        foreach ($roadmap as $phase) {
+            $allActions = array_merge($allActions, $phase['actions']);
+        }
+        
+        usort($allActions, function($a, $b) {
+            return $b['priority'] - $a['priority'];
+        });
+        
+        $summary['top_priorities'] = array_slice($allActions, 0, 3);
+
+        return $summary;
+    }
+
+    /**
+     * Get maturity level based on global score
+     *
+     * @param int $score Global score
+     * @return array Maturity level info
+     */
+    private function getMaturityLevel($score)
+    {
+        if ($score >= 80) {
+            return array(
+                'level' => 'expert',
+                'label' => 'Expert',
+                'description' => 'Maturité digitale excellente',
+                'color' => '#28a745'
+            );
+        } elseif ($score >= 60) {
+            return array(
+                'level' => 'advanced',
+                'label' => 'Avancé',
+                'description' => 'Bonne maturité digitale',
+                'color' => '#17a2b8'
+            );
+        } elseif ($score >= 40) {
+            return array(
+                'level' => 'intermediate',
+                'label' => 'Intermédiaire',
+                'description' => 'Maturité digitale moyenne',
+                'color' => '#ffc107'
+            );
+        } elseif ($score >= 20) {
+            return array(
+                'level' => 'beginner',
+                'label' => 'Débutant',
+                'description' => 'Maturité digitale faible',
+                'color' => '#fd7e14'
+            );
+        } else {
+            return array(
+                'level' => 'critical',
+                'label' => 'Critique',
+                'description' => 'Maturité digitale très faible',
+                'color' => '#dc3545'
+            );
+        }
+    }
+
+    /**
+     * Get category label in French
+     *
+     * @param string $category Category key
+     * @return string French label
+     */
+    private function getCategoryLabel($category)
+    {
+        $labels = array(
+            'digital' => 'Maturité Digitale',
+            'security' => 'Cybersécurité',
+            'cloud' => 'Cloud Computing',
+            'automation' => 'Automatisation',
+            'infrastructure' => 'Infrastructure'
+        );
+        
+        return isset($labels[$category]) ? $labels[$category] : ucfirst($category);
+    }
+
+    /**
+     * Get implementation timeline summary
+     *
+     * @param array $roadmap Roadmap data
+     * @return array Timeline summary
+     */
+    private function getImplementationTimeline($roadmap)
+    {
+        $timeline = array();
+        
+        foreach ($roadmap as $phaseKey => $phase) {
+            if (!empty($phase['actions'])) {
+                $timeline[] = array(
+                    'phase' => $phase['title'],
+                    'duration' => $phase['duration'],
+                    'actions_count' => count($phase['actions']),
+                    'investment' => $phase['total_investment'],
+                    'savings' => $phase['expected_savings']
+                );
+            }
+        }
+        
+        return $timeline;
+    }
+
+    /**
+     * Export audit data for external analysis
+     *
+     * @param string $format Export format (json, csv, xml)
+     * @return string|false Exported data or false on error
+     */
+    public function exportAuditData($format = 'json')
+    {
+        $data = array(
+            'audit_info' => array(
+                'id' => $this->id,
+                'ref' => $this->ref,
+                'date_creation' => $this->date_creation,
+                'fk_soc' => $this->fk_soc,
+                'structure_type' => $this->structure_type,
+                'status' => $this->status
+            ),
+            'scores' => $this->calculateScores(),
+            'executive_summary' => $this->generateExecutiveSummary(),
+            'roi_analysis' => $this->calculateROI(),
+            'roadmap' => $this->generateRoadmap(),
+            'export_date' => date('Y-m-d H:i:s')
+        );
+
+        switch ($format) {
+            case 'json':
+                return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                
+            case 'csv':
+                // Simplified CSV export for scores
+                $csv = "Category,Score,Level\n";
+                foreach ($data['scores'] as $category => $score) {
+                    $level = $this->getMaturityLevel($score);
+                    $csv .= "$category,$score,{$level['label']}\n";
+                }
+                return $csv;
+                
+            case 'xml':
+                $xml = new SimpleXMLElement('<audit_data/>');
+                $this->arrayToXml($data, $xml);
+                return $xml->asXML();
+                
+            default:
+                $this->error = "Format d'export non supporté: $format";
+                return false;
+        }
+    }
+
+    /**
+     * Convert array to XML
+     *
+     * @param array $data Data array
+     * @param SimpleXMLElement $xml XML element
+     */
+    private function arrayToXml($data, &$xml)
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $subnode = $xml->addChild($key);
+                $this->arrayToXml($value, $subnode);
+            } else {
+                $xml->addChild($key, htmlspecialchars($value));
+            }
+        }
+    }
 }

@@ -48,6 +48,204 @@ class Questionnaire
     }
 
     /**
+     * Add a comment to a question
+     *
+     * @param int $questionId Question ID
+     * @param int $auditId Audit ID
+     * @param string $comment Comment text
+     * @param array $attachments Array of attachment file paths
+     * @param string $questionName Question name/identifier
+     * @return int|false Comment ID if success, false if error
+     */
+    public function addComment($questionId, $auditId, $comment, $attachments = array(), $questionName = '')
+    {
+        global $user;
+        
+        $sql = "INSERT INTO ".MAIN_DB_PREFIX."auditdigital_comments (";
+        $sql .= "fk_audit, fk_question, question_name, comment, attachments, fk_user, date_creation, entity";
+        $sql .= ") VALUES (";
+        $sql .= (int) $auditId.", ";
+        $sql .= (int) $questionId.", ";
+        $sql .= "'".$this->db->escape($questionName)."', ";
+        $sql .= "'".$this->db->escape($comment)."', ";
+        $sql .= "'".$this->db->escape(json_encode($attachments))."', ";
+        $sql .= (int) $user->id.", ";
+        $sql .= "'".$this->db->idate(dol_now())."', ";
+        $sql .= (int) $conf->entity;
+        $sql .= ")";
+        
+        $result = $this->db->query($sql);
+        if ($result) {
+            return $this->db->last_insert_id(MAIN_DB_PREFIX."auditdigital_comments");
+        } else {
+            $this->error = $this->db->lasterror();
+            return false;
+        }
+    }
+
+    /**
+     * Get comments for a specific question
+     *
+     * @param int $questionId Question ID
+     * @param int $auditId Audit ID
+     * @param string $questionName Question name (optional)
+     * @return array|false Array of comments or false if error
+     */
+    public function getComments($questionId = 0, $auditId = 0, $questionName = '')
+    {
+        $sql = "SELECT c.rowid, c.fk_audit, c.fk_question, c.question_name, c.comment, c.attachments,";
+        $sql .= " c.fk_user, c.date_creation, c.date_modification,";
+        $sql .= " u.firstname, u.lastname, u.login";
+        $sql .= " FROM ".MAIN_DB_PREFIX."auditdigital_comments as c";
+        $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON c.fk_user = u.rowid";
+        $sql .= " WHERE c.entity = ".(int) $conf->entity;
+        
+        if ($auditId > 0) {
+            $sql .= " AND c.fk_audit = ".(int) $auditId;
+        }
+        
+        if ($questionId > 0) {
+            $sql .= " AND c.fk_question = ".(int) $questionId;
+        }
+        
+        if (!empty($questionName)) {
+            $sql .= " AND c.question_name = '".$this->db->escape($questionName)."'";
+        }
+        
+        $sql .= " ORDER BY c.date_creation DESC";
+        
+        $result = $this->db->query($sql);
+        if ($result) {
+            $comments = array();
+            while ($obj = $this->db->fetch_object($result)) {
+                $comment = array(
+                    'id' => $obj->rowid,
+                    'audit_id' => $obj->fk_audit,
+                    'question_id' => $obj->fk_question,
+                    'question_name' => $obj->question_name,
+                    'comment' => $obj->comment,
+                    'attachments' => json_decode($obj->attachments, true) ?: array(),
+                    'user_id' => $obj->fk_user,
+                    'user_name' => $obj->firstname.' '.$obj->lastname,
+                    'user_login' => $obj->login,
+                    'date_creation' => $obj->date_creation,
+                    'date_modification' => $obj->date_modification
+                );
+                $comments[] = $comment;
+            }
+            return $comments;
+        } else {
+            $this->error = $this->db->lasterror();
+            return false;
+        }
+    }
+
+    /**
+     * Update a comment
+     *
+     * @param int $commentId Comment ID
+     * @param string $comment New comment text
+     * @param array $attachments New attachments
+     * @return bool True if success, false if error
+     */
+    public function updateComment($commentId, $comment, $attachments = array())
+    {
+        $sql = "UPDATE ".MAIN_DB_PREFIX."auditdigital_comments SET";
+        $sql .= " comment = '".$this->db->escape($comment)."',";
+        $sql .= " attachments = '".$this->db->escape(json_encode($attachments))."',";
+        $sql .= " date_modification = '".$this->db->idate(dol_now())."'";
+        $sql .= " WHERE rowid = ".(int) $commentId;
+        $sql .= " AND entity = ".(int) $conf->entity;
+        
+        $result = $this->db->query($sql);
+        if (!$result) {
+            $this->error = $this->db->lasterror();
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Delete a comment
+     *
+     * @param int $commentId Comment ID
+     * @return bool True if success, false if error
+     */
+    public function deleteComment($commentId)
+    {
+        $sql = "DELETE FROM ".MAIN_DB_PREFIX."auditdigital_comments";
+        $sql .= " WHERE rowid = ".(int) $commentId;
+        $sql .= " AND entity = ".(int) $conf->entity;
+        
+        $result = $this->db->query($sql);
+        if (!$result) {
+            $this->error = $this->db->lasterror();
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Handle file upload for comments
+     *
+     * @param array $file $_FILES array element
+     * @param int $auditId Audit ID
+     * @param string $questionName Question name
+     * @return array|false Array with file info or false if error
+     */
+    public function uploadCommentAttachment($file, $auditId, $questionName)
+    {
+        global $conf;
+        
+        if (!is_uploaded_file($file['tmp_name'])) {
+            $this->error = "Fichier non valide";
+            return false;
+        }
+        
+        // Vérifier la taille du fichier (max 10MB)
+        if ($file['size'] > 10 * 1024 * 1024) {
+            $this->error = "Fichier trop volumineux (max 10MB)";
+            return false;
+        }
+        
+        // Vérifier l'extension
+        $allowedExtensions = array('pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'jpg', 'jpeg', 'png', 'gif');
+        $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        if (!in_array($fileExtension, $allowedExtensions)) {
+            $this->error = "Type de fichier non autorisé";
+            return false;
+        }
+        
+        // Créer le répertoire de destination
+        $uploadDir = $conf->auditdigital->multidir_output[$conf->entity].'/comments/'.$auditId.'/';
+        if (!is_dir($uploadDir)) {
+            dol_mkdir($uploadDir);
+        }
+        
+        // Générer un nom de fichier unique
+        $fileName = uniqid().'_'.dol_sanitizeFileName($file['name']);
+        $filePath = $uploadDir.$fileName;
+        
+        // Déplacer le fichier
+        if (move_uploaded_file($file['tmp_name'], $filePath)) {
+            return array(
+                'original_name' => $file['name'],
+                'file_name' => $fileName,
+                'file_path' => $filePath,
+                'file_size' => $file['size'],
+                'mime_type' => $file['type'],
+                'upload_date' => date('Y-m-d H:i:s')
+            );
+        } else {
+            $this->error = "Erreur lors de l'upload du fichier";
+            return false;
+        }
+    }
+
+    /**
      * Initialize questionnaire structure
      *
      * @return void

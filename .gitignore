@@ -1,0 +1,69 @@
+# =============================================================================
+# .gitignore pour Module AuditDigital Moderne
+# =============================================================================
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.log
+*.cache
+*~
+*.bak
+*.swp
+*.swo
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Répertoires de développement
+node_modules/
+vendor/
+.sass-cache/
+.vscode/
+.idea/
+
+# Fichiers de configuration locaux
+config.local.php
+.env.local
+.env.*.local
+
+# Données utilisateur et uploads
+documents/
+temp/
+logs/
+backups/
+
+# Fichiers de base de données
+*.sql
+*.db
+*.sqlite
+
+# Fichiers de build
+dist/
+build/
+*.min.js
+*.min.css
+
+# Fichiers de test
+coverage/
+.nyc_output/
+.phpunit.result.cache
+
+# Fichiers spécifiques Dolibarr
+conf.php
+install.lock
+
+# Certificats et clés
+*.pem
+*.key
+*.crt
+*.p12
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
