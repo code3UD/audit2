@@ -126,6 +126,7 @@ if ($action == 'create_audit') {
         // Set properties from wizard data
         $audit->ref = 'AUDIT-'.date('YmdHis');
         $audit->label = 'Audit Digital - '.date('d/m/Y');
+        $audit->audit_type = 'digital_maturity'; // Type d'audit par défaut
         $audit->fk_soc = $wizard_data['step_1']['audit_socid'] ?? 0;
         $audit->structure_type = $wizard_data['step_1']['audit_structure_type'] ?? '';
         $audit->sector = $wizard_data['step_1']['audit_sector'] ?? '';
@@ -3201,31 +3202,80 @@ function calculateGlobalScore() {
 
 function getDigitalScore() {
     // Calculer le score de maturité digitale
-    const processes = parseInt(document.getElementById('audit_digital_processes')?.value || 0);
-    const tools = parseInt(document.getElementById('audit_collaborative_tools')?.value || 0);
+    let processes = 0, tools = 0;
+    
+    // Essayer de récupérer depuis les éléments actuels
+    const processesEl = document.getElementById('audit_digital_processes');
+    const toolsEl = document.getElementById('audit_collaborative_tools');
+    
+    if (processesEl && processesEl.value) {
+        processes = parseInt(processesEl.value);
+        tools = parseInt(toolsEl?.value || 0);
+    } else {
+        // Récupérer depuis localStorage si pas sur la bonne étape
+        const savedData = localStorage.getItem('audit_wizard_data');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            processes = parseInt(data.step_2?.audit_digital_processes || 0);
+            tools = parseInt(data.step_2?.audit_collaborative_tools || 0);
+        }
+    }
+    
+    if (processes === 0 && tools === 0) return 0;
     return ((processes + tools) / 10) * 100;
 }
 
 function getSecurityScore() {
     // Calculer le score de sécurité
-    const selectedItems = document.querySelectorAll('.security-item.selected');
     let totalScore = 0;
-    selectedItems.forEach(item => {
-        const weight = parseInt(item.querySelector('.security-weight').textContent.replace(/\D/g, ''));
-        totalScore += weight;
-    });
-    return totalScore;
+    
+    // Essayer de récupérer depuis les éléments actuels
+    const selectedItems = document.querySelectorAll('.security-item.selected');
+    if (selectedItems.length > 0) {
+        selectedItems.forEach(item => {
+            const weight = parseInt(item.querySelector('.security-weight').textContent.replace(/\D/g, ''));
+            totalScore += weight;
+        });
+    } else {
+        // Récupérer depuis localStorage
+        const savedData = localStorage.getItem('audit_wizard_data');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            const measures = data.step_3?.audit_security_measures || '';
+            // Calculer le score basé sur les mesures sauvegardées
+            const measuresList = measures.split(',').filter(m => m.length > 0);
+            totalScore = measuresList.length * 20; // 20 points par mesure
+        }
+    }
+    
+    return Math.min(totalScore, 100);
 }
 
 function getCloudScore() {
     // Calculer le score cloud/infrastructure
-    const infrastructure = document.getElementById('audit_infrastructure')?.value;
-    const migration = document.getElementById('audit_cloud_migration')?.value;
+    let infrastructure = '', migration = '';
+    
+    // Essayer de récupérer depuis les éléments actuels
+    const infraEl = document.getElementById('audit_infrastructure');
+    const migrationEl = document.getElementById('audit_cloud_migration');
+    
+    if (infraEl && infraEl.value) {
+        infrastructure = infraEl.value;
+        migration = migrationEl?.value || '';
+    } else {
+        // Récupérer depuis localStorage
+        const savedData = localStorage.getItem('audit_wizard_data');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            infrastructure = data.step_4?.audit_infrastructure || '';
+            migration = data.step_4?.audit_cloud_migration || '';
+        }
+    }
     
     let score = 0;
     if (infrastructure === 'full_cloud') score += 50;
     else if (infrastructure === 'hybrid') score += 30;
-    else score += 10;
+    else if (infrastructure === 'on_premise') score += 10;
     
     if (migration === 'in_progress') score += 30;
     else if (migration === 'planning') score += 20;
@@ -3236,9 +3286,27 @@ function getCloudScore() {
 
 function getAutomationScore() {
     // Calculer le score d'automatisation
+    let activeCount = 0, totalCount = 9; // 9 processus au total
+    
+    // Essayer de récupérer depuis les éléments actuels
     const activeItems = document.querySelectorAll('.automation-item.active');
     const totalItems = document.querySelectorAll('.automation-item');
-    return (activeItems.length / totalItems.length) * 100;
+    
+    if (totalItems.length > 0) {
+        activeCount = activeItems.length;
+        totalCount = totalItems.length;
+    } else {
+        // Récupérer depuis localStorage
+        const savedData = localStorage.getItem('audit_wizard_data');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            const processes = data.step_5?.audit_automation_processes || '';
+            activeCount = processes.split(',').filter(p => p.length > 0).length;
+        }
+    }
+    
+    if (totalCount === 0) return 0;
+    return (activeCount / totalCount) * 100;
 }
 
 function getMaturityLevel(score) {
@@ -3426,7 +3494,38 @@ function updateRoadmapList(listId, items) {
 // Fonctions d'export
 function exportToPDF() {
     showNotification('Génération du PDF en cours...', 'info');
-    // TODO: Implémenter l'export PDF
+    
+    // Rediriger vers la génération PDF côté serveur
+    const { globalScore, scores } = calculateGlobalScore();
+    
+    // Créer un formulaire pour envoyer les données
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?php echo dol_buildpath('/auditdigital/export_pdf.php', 1); ?>';
+    form.style.display = 'none';
+    
+    // Ajouter les données
+    const data = {
+        global_score: Math.round(globalScore),
+        digital_score: Math.round(scores.digital),
+        security_score: Math.round(scores.security),
+        cloud_score: Math.round(scores.cloud),
+        automation_score: Math.round(scores.automation),
+        audit_data: JSON.stringify(wizardData)
+    };
+    
+    Object.keys(data).forEach(key => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = data[key];
+        form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    
     setTimeout(() => {
         showNotification('PDF généré avec succès', 'success');
     }, 2000);
@@ -3434,7 +3533,31 @@ function exportToPDF() {
 
 function exportToExcel() {
     showNotification('Export Excel en cours...', 'info');
-    // TODO: Implémenter l'export Excel
+    
+    const { globalScore, scores } = calculateGlobalScore();
+    
+    // Créer les données Excel
+    const excelData = [
+        ['Audit Digital - Résultats', ''],
+        ['Date', new Date().toLocaleDateString()],
+        ['', ''],
+        ['Scores par domaine', ''],
+        ['Maturité Digitale', Math.round(scores.digital) + '%'],
+        ['Cybersécurité', Math.round(scores.security) + '%'],
+        ['Cloud & Infrastructure', Math.round(scores.cloud) + '%'],
+        ['Automatisation', Math.round(scores.automation) + '%'],
+        ['', ''],
+        ['Score Global', Math.round(globalScore) + '%']
+    ];
+    
+    // Convertir en CSV
+    const csvContent = excelData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'audit-digital-resultats.csv';
+    link.click();
+    
     setTimeout(() => {
         showNotification('Fichier Excel téléchargé', 'success');
     }, 1500);
@@ -3466,7 +3589,41 @@ function initAutoSave() {
 }
 
 function saveCurrentStep() {
+    // Collecter toutes les données du formulaire
     const formData = new FormData(document.getElementById('wizardForm'));
+    const stepData = {};
+    
+    // Convertir FormData en objet
+    for (let [key, value] of formData.entries()) {
+        if (key !== 'token' && key !== 'action' && key !== 'step') {
+            stepData[key] = value;
+        }
+    }
+    
+    // Sauvegarder en localStorage
+    let savedData = {};
+    try {
+        const existing = localStorage.getItem('audit_wizard_data');
+        if (existing) {
+            savedData = JSON.parse(existing);
+        }
+    } catch (e) {
+        console.warn('Erreur lecture localStorage:', e);
+    }
+    
+    savedData['step_' + currentStep] = stepData;
+    savedData.last_step = currentStep;
+    savedData.timestamp = new Date().toISOString();
+    
+    try {
+        localStorage.setItem('audit_wizard_data', JSON.stringify(savedData));
+        wizardData = savedData;
+        showAutoSaveIndicator();
+    } catch (e) {
+        console.error('Erreur sauvegarde localStorage:', e);
+    }
+    
+    // Sauvegarder aussi côté serveur
     formData.append('ajax', '1');
     
     fetch(window.location.href, {
@@ -3476,11 +3633,11 @@ function saveCurrentStep() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showAutoSaveIndicator();
+            console.log('Sauvegarde serveur OK');
         }
     })
     .catch(error => {
-        console.error('Erreur auto-save:', error);
+        console.error('Erreur auto-save serveur:', error);
     });
 }
 
