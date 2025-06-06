@@ -237,7 +237,7 @@ if (empty($reshook)) {
 
 $form = new Form($db);
 $formfile = new FormFile($db);
-$formproject = new FormProject($db);
+$formproject = new FormProjets($db);
 
 $title = $langs->trans("Audit");
 $help_url = '';
