@@ -86,16 +86,42 @@ if ($action == 'create_audit') {
         // Récupérer toutes les données de la session
         $wizard_data = $_SESSION['audit_wizard_data'] ?? array();
         
+        // Calculer les scores
+        $digital_level = $wizard_data['step_2']['audit_digital_level'] ?? 0;
+        $web_presence = $wizard_data['step_2']['audit_web_presence'] ?? 0;
+        $maturity_score = ($digital_level + $web_presence) * 3;
+        
+        $security_level = $wizard_data['step_3']['audit_security_level'] ?? 0;
+        $rgpd_compliance = $wizard_data['step_3']['audit_rgpd_compliance'] ?? 0;
+        $security_score = ($security_level + $rgpd_compliance) * 2.5;
+        
+        $cloud_adoption = $wizard_data['step_4']['audit_cloud_adoption'] ?? 0;
+        $mobility = $wizard_data['step_4']['audit_mobility'] ?? 0;
+        $cloud_score = ($cloud_adoption + $mobility) * 2.5;
+        
+        $automation_level = $wizard_data['step_5']['audit_automation_level'] ?? 0;
+        $collaboration_tools = $wizard_data['step_5']['audit_collaboration_tools'] ?? 0;
+        $automation_score = ($automation_level + $collaboration_tools) * 2;
+        
+        $total_score = $maturity_score + $security_score + $cloud_score + $automation_score;
+        
         // Set properties from wizard data
         $audit->ref = 'AUDIT-'.date('YmdHis');
         $audit->label = 'Audit Digital - '.date('d/m/Y');
         $audit->fk_soc = $wizard_data['step_1']['audit_socid'] ?? 0;
         $audit->structure_type = $wizard_data['step_1']['audit_structure_type'] ?? '';
-        $audit->sector = $wizard_data['step_1']['audit_sector'] ?? '';
-        $audit->employees_count = $wizard_data['step_1']['audit_employees_count'] ?? '';
-        $audit->annual_budget = $wizard_data['step_1']['audit_annual_budget'] ?? '';
         $audit->audit_type = 'digital_maturity'; // CHAMP OBLIGATOIRE AJOUTÉ
         $audit->status = 0; // Draft
+        
+        // Sauvegarder les scores calculés
+        $audit->score_global = round($total_score);
+        $audit->score_maturite = round($maturity_score);
+        $audit->score_cybersecurite = round($security_score);
+        $audit->score_cloud = round($cloud_score);
+        $audit->score_automatisation = round($automation_score);
+        
+        // Sauvegarder les réponses en JSON
+        $audit->json_responses = json_encode($wizard_data);
         
         $result = $audit->create($user);
         
@@ -559,31 +585,326 @@ llxHeader("", "Audit Digital Moderne");
                     </div>
 
                     <div class="form-section">
-                        <h3>Niveau de digitalisation des processus</h3>
+                        <h3>Niveau de digitalisation des processus <span class="required">*</span></h3>
                         <div class="option-cards">
                             <div class="option-card" data-value="1" onclick="selectOption(this, 'audit_digital_level')">
+                                <div class="card-icon">
+                                    <i class="fas fa-seedling"></i>
+                                </div>
                                 <div class="card-content">
                                     <h4>Niveau 1 - Débutant</h4>
-                                    <p>Processus principalement manuels</p>
+                                    <p>Processus principalement manuels, peu d'outils digitaux</p>
                                 </div>
                                 <div class="card-check"><i class="fas fa-check"></i></div>
                             </div>
                             <div class="option-card" data-value="3" onclick="selectOption(this, 'audit_digital_level')">
+                                <div class="card-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
                                 <div class="card-content">
                                     <h4>Niveau 3 - Intermédiaire</h4>
-                                    <p>Certains processus digitalisés</p>
+                                    <p>Certains processus digitalisés, outils métier en place</p>
                                 </div>
                                 <div class="card-check"><i class="fas fa-check"></i></div>
                             </div>
                             <div class="option-card" data-value="5" onclick="selectOption(this, 'audit_digital_level')">
+                                <div class="card-icon">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
                                 <div class="card-content">
                                     <h4>Niveau 5 - Avancé</h4>
-                                    <p>Processus largement digitalisés</p>
+                                    <p>Processus largement digitalisés, automatisation poussée</p>
                                 </div>
                                 <div class="card-check"><i class="fas fa-check"></i></div>
                             </div>
                         </div>
-                        <input type="hidden" name="audit_digital_level" id="audit_digital_level">
+                        <input type="hidden" name="audit_digital_level" id="audit_digital_level" required>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Présence sur le web <span class="required">*</span></h3>
+                        <div class="option-cards">
+                            <div class="option-card" data-value="1" onclick="selectOption(this, 'audit_web_presence')">
+                                <div class="card-icon">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Site vitrine simple</h4>
+                                    <p>Site web basique, peu de fonctionnalités</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="3" onclick="selectOption(this, 'audit_web_presence')">
+                                <div class="card-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Site interactif</h4>
+                                    <p>E-commerce, formulaires, interactions utilisateur</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="5" onclick="selectOption(this, 'audit_web_presence')">
+                                <div class="card-icon">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Écosystème digital</h4>
+                                    <p>Multi-canal, mobile, réseaux sociaux intégrés</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_web_presence" id="audit_web_presence" required>
+                    </div>
+                </div>
+
+            <?php elseif ($step == 3): ?>
+                <!-- Étape 3: Cybersécurité -->
+                <div class="step-container">
+                    <div class="step-header">
+                        <h2><i class="fas fa-shield-alt"></i> Cybersécurité</h2>
+                        <p>Évaluez votre niveau de protection et de sécurité informatique</p>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Niveau de protection des données <span class="required">*</span></h3>
+                        <div class="option-cards">
+                            <div class="option-card" data-value="1" onclick="selectOption(this, 'audit_security_level')">
+                                <div class="card-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Protection basique</h4>
+                                    <p>Antivirus simple, pas de politique de sécurité formelle</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="3" onclick="selectOption(this, 'audit_security_level')">
+                                <div class="card-icon">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Protection intermédiaire</h4>
+                                    <p>Firewall, sauvegardes régulières, sensibilisation utilisateurs</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="5" onclick="selectOption(this, 'audit_security_level')">
+                                <div class="card-icon">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Protection avancée</h4>
+                                    <p>Chiffrement, authentification forte, monitoring 24/7</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_security_level" id="audit_security_level" required>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Conformité RGPD <span class="required">*</span></h3>
+                        <div class="option-cards">
+                            <div class="option-card" data-value="1" onclick="selectOption(this, 'audit_rgpd_compliance')">
+                                <div class="card-icon">
+                                    <i class="fas fa-question-circle"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Non conforme</h4>
+                                    <p>Pas de démarche RGPD initiée</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="3" onclick="selectOption(this, 'audit_rgpd_compliance')">
+                                <div class="card-icon">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>En cours</h4>
+                                    <p>Démarche initiée, registre des traitements en cours</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="5" onclick="selectOption(this, 'audit_rgpd_compliance')">
+                                <div class="card-icon">
+                                    <i class="fas fa-certificate"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Conforme</h4>
+                                    <p>RGPD respecté, DPO nommé, procédures en place</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_rgpd_compliance" id="audit_rgpd_compliance" required>
+                    </div>
+                </div>
+
+            <?php elseif ($step == 4): ?>
+                <!-- Étape 4: Cloud & Infrastructure -->
+                <div class="step-container">
+                    <div class="step-header">
+                        <h2><i class="fas fa-cloud"></i> Cloud & Infrastructure</h2>
+                        <p>Évaluez votre infrastructure informatique et votre adoption du cloud</p>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Niveau d'adoption du cloud <span class="required">*</span></h3>
+                        <div class="option-cards">
+                            <div class="option-card" data-value="1" onclick="selectOption(this, 'audit_cloud_adoption')">
+                                <div class="card-icon">
+                                    <i class="fas fa-server"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Infrastructure locale</h4>
+                                    <p>Serveurs physiques, pas de cloud</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="3" onclick="selectOption(this, 'audit_cloud_adoption')">
+                                <div class="card-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Cloud hybride</h4>
+                                    <p>Mix infrastructure locale et services cloud</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="5" onclick="selectOption(this, 'audit_cloud_adoption')">
+                                <div class="card-icon">
+                                    <i class="fas fa-cloud"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Cloud natif</h4>
+                                    <p>Infrastructure entièrement dans le cloud</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_cloud_adoption" id="audit_cloud_adoption" required>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Mobilité et télétravail <span class="required">*</span></h3>
+                        <div class="option-cards">
+                            <div class="option-card" data-value="1" onclick="selectOption(this, 'audit_mobility')">
+                                <div class="card-icon">
+                                    <i class="fas fa-desktop"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Travail sur site uniquement</h4>
+                                    <p>Pas d'accès distant, postes fixes</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="3" onclick="selectOption(this, 'audit_mobility')">
+                                <div class="card-icon">
+                                    <i class="fas fa-laptop"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Mobilité occasionnelle</h4>
+                                    <p>VPN, quelques outils mobiles</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="5" onclick="selectOption(this, 'audit_mobility')">
+                                <div class="card-icon">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Mobilité complète</h4>
+                                    <p>Télétravail, applications mobiles, BYOD</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_mobility" id="audit_mobility" required>
+                    </div>
+                </div>
+
+            <?php elseif ($step == 5): ?>
+                <!-- Étape 5: Automatisation -->
+                <div class="step-container">
+                    <div class="step-header">
+                        <h2><i class="fas fa-robot"></i> Automatisation</h2>
+                        <p>Évaluez votre niveau d'automatisation des processus métier</p>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Automatisation des processus <span class="required">*</span></h3>
+                        <div class="option-cards">
+                            <div class="option-card" data-value="1" onclick="selectOption(this, 'audit_automation_level')">
+                                <div class="card-icon">
+                                    <i class="fas fa-hand-paper"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Processus manuels</h4>
+                                    <p>Peu ou pas d'automatisation</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="3" onclick="selectOption(this, 'audit_automation_level')">
+                                <div class="card-icon">
+                                    <i class="fas fa-cogs"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Automatisation partielle</h4>
+                                    <p>Quelques processus automatisés</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="5" onclick="selectOption(this, 'audit_automation_level')">
+                                <div class="card-icon">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Automatisation avancée</h4>
+                                    <p>IA, RPA, workflows automatisés</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_automation_level" id="audit_automation_level" required>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Outils de collaboration <span class="required">*</span></h3>
+                        <div class="option-cards">
+                            <div class="option-card" data-value="1" onclick="selectOption(this, 'audit_collaboration_tools')">
+                                <div class="card-icon">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Email uniquement</h4>
+                                    <p>Communication par email principalement</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="3" onclick="selectOption(this, 'audit_collaboration_tools')">
+                                <div class="card-icon">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Outils de base</h4>
+                                    <p>Chat, visioconférence, partage de fichiers</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            <div class="option-card" data-value="5" onclick="selectOption(this, 'audit_collaboration_tools')">
+                                <div class="card-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Suite collaborative</h4>
+                                    <p>Plateforme intégrée, gestion de projets, workflows</p>
+                                </div>
+                                <div class="card-check"><i class="fas fa-check"></i></div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_collaboration_tools" id="audit_collaboration_tools" required>
                     </div>
                 </div>
 
@@ -595,42 +916,128 @@ llxHeader("", "Audit Digital Moderne");
                         <p>Voici le résumé de votre audit digital</p>
                     </div>
 
+                    <?php
+                    // Calculer le score basé sur les données de session
+                    $wizard_data = $_SESSION['audit_wizard_data'] ?? array();
+                    $total_score = 0;
+                    $max_score = 0;
+                    $scores_detail = array();
+                    
+                    // Étape 2: Maturité Digitale (poids: 30%)
+                    $digital_level = $wizard_data['step_2']['audit_digital_level'] ?? 0;
+                    $web_presence = $wizard_data['step_2']['audit_web_presence'] ?? 0;
+                    $maturity_score = ($digital_level + $web_presence) * 3; // Max 30
+                    $scores_detail['Maturité Digitale'] = $maturity_score;
+                    
+                    // Étape 3: Cybersécurité (poids: 25%)
+                    $security_level = $wizard_data['step_3']['audit_security_level'] ?? 0;
+                    $rgpd_compliance = $wizard_data['step_3']['audit_rgpd_compliance'] ?? 0;
+                    $security_score = ($security_level + $rgpd_compliance) * 2.5; // Max 25
+                    $scores_detail['Cybersécurité'] = $security_score;
+                    
+                    // Étape 4: Cloud & Infrastructure (poids: 25%)
+                    $cloud_adoption = $wizard_data['step_4']['audit_cloud_adoption'] ?? 0;
+                    $mobility = $wizard_data['step_4']['audit_mobility'] ?? 0;
+                    $cloud_score = ($cloud_adoption + $mobility) * 2.5; // Max 25
+                    $scores_detail['Cloud & Infrastructure'] = $cloud_score;
+                    
+                    // Étape 5: Automatisation (poids: 20%)
+                    $automation_level = $wizard_data['step_5']['audit_automation_level'] ?? 0;
+                    $collaboration_tools = $wizard_data['step_5']['audit_collaboration_tools'] ?? 0;
+                    $automation_score = ($automation_level + $collaboration_tools) * 2; // Max 20
+                    $scores_detail['Automatisation'] = $automation_score;
+                    
+                    $total_score = $maturity_score + $security_score + $cloud_score + $automation_score;
+                    $max_score = 100;
+                    
+                    // Déterminer le niveau de maturité
+                    $maturity_level = 'Débutant';
+                    $maturity_color = '#dc3545';
+                    $maturity_icon = 'fa-seedling';
+                    
+                    if ($total_score >= 80) {
+                        $maturity_level = 'Expert';
+                        $maturity_color = '#28a745';
+                        $maturity_icon = 'fa-trophy';
+                    } elseif ($total_score >= 60) {
+                        $maturity_level = 'Avancé';
+                        $maturity_color = '#17a2b8';
+                        $maturity_icon = 'fa-rocket';
+                    } elseif ($total_score >= 40) {
+                        $maturity_level = 'Intermédiaire';
+                        $maturity_color = '#ffc107';
+                        $maturity_icon = 'fa-chart-line';
+                    }
+                    ?>
+
                     <div style="text-align: center; padding: 40px;">
-                        <div style="font-size: 4rem; color: var(--primary-color); margin-bottom: 20px;">
-                            <i class="fas fa-trophy"></i>
+                        <div style="font-size: 4rem; color: <?php echo $maturity_color; ?>; margin-bottom: 20px;">
+                            <i class="fas <?php echo $maturity_icon; ?>"></i>
                         </div>
                         <h3>Audit Digital Complété !</h3>
                         <p>Votre évaluation de maturité digitale est prête.</p>
                         
-                        <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 12px;">
-                            <h4>Score estimé : <span style="color: var(--primary-color);">75/100</span></h4>
-                            <p>Niveau de maturité : <strong>Intermédiaire</strong></p>
+                        <div style="margin: 30px 0; padding: 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <h4 style="font-size: 1.8rem; margin-bottom: 15px;">
+                                Score global : <span style="color: <?php echo $maturity_color; ?>; font-weight: bold;"><?php echo round($total_score); ?>/100</span>
+                            </h4>
+                            <p style="font-size: 1.2rem; margin-bottom: 20px;">
+                                Niveau de maturité : <strong style="color: <?php echo $maturity_color; ?>;"><?php echo $maturity_level; ?></strong>
+                            </p>
+                            
+                            <!-- Barre de progression -->
+                            <div style="background: #e9ecef; border-radius: 10px; height: 20px; margin: 20px 0; overflow: hidden;">
+                                <div style="background: <?php echo $maturity_color; ?>; height: 100%; width: <?php echo $total_score; ?>%; transition: width 0.8s ease-in-out; border-radius: 10px;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Détail des scores par domaine -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
+                            <?php foreach ($scores_detail as $domain => $score): ?>
+                                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                    <h5 style="margin-bottom: 10px; color: #2c3e50;"><?php echo $domain; ?></h5>
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">
+                                        <?php echo round($score); ?><?php 
+                                        $max_domain = ($domain == 'Maturité Digitale') ? 30 : 
+                                                     (($domain == 'Cybersécurité' || $domain == 'Cloud & Infrastructure') ? 25 : 20);
+                                        echo '/'.$max_domain; 
+                                        ?>
+                                    </div>
+                                    <div style="background: #e9ecef; border-radius: 5px; height: 8px; margin-top: 10px; overflow: hidden;">
+                                        <div style="background: var(--primary-color); height: 100%; width: <?php echo ($score/$max_domain)*100; ?>%; border-radius: 5px;"></div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        
+                        <!-- Recommandations rapides -->
+                        <div style="margin-top: 40px; padding: 25px; background: #fff3cd; border-radius: 12px; border-left: 5px solid #ffc107;">
+                            <h5 style="color: #856404; margin-bottom: 15px;">
+                                <i class="fas fa-lightbulb"></i> Recommandations prioritaires
+                            </h5>
+                            <div style="text-align: left; color: #856404;">
+                                <?php if ($total_score < 40): ?>
+                                    <p>• Commencer par digitaliser les processus de base</p>
+                                    <p>• Mettre en place une politique de sécurité informatique</p>
+                                    <p>• Former les équipes aux outils numériques</p>
+                                <?php elseif ($total_score < 60): ?>
+                                    <p>• Optimiser les processus digitaux existants</p>
+                                    <p>• Renforcer la sécurité et la conformité RGPD</p>
+                                    <p>• Explorer les solutions cloud</p>
+                                <?php elseif ($total_score < 80): ?>
+                                    <p>• Automatiser davantage de processus</p>
+                                    <p>• Implémenter des solutions d'intelligence artificielle</p>
+                                    <p>• Développer l'écosystème digital</p>
+                                <?php else: ?>
+                                    <p>• Maintenir l'excellence opérationnelle</p>
+                                    <p>• Innover avec les technologies émergentes</p>
+                                    <p>• Partager les bonnes pratiques</p>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-            <?php else: ?>
-                <!-- Autres étapes simplifiées -->
-                <div class="step-container">
-                    <div class="step-header">
-                        <h2>Étape <?php echo $step; ?> - <?php 
-                            $titles = ['', 'Infos', 'Maturité Digitale', 'Cybersécurité', 'Cloud & Infrastructure', 'Automatisation', 'Synthèse'];
-                            echo $titles[$step]; 
-                        ?></h2>
-                        <p>Cette étape sera complètement implémentée dans la prochaine version.</p>
-                    </div>
-                    
-                    <div style="text-align: center; padding: 40px;">
-                        <div style="font-size: 3rem; color: var(--primary-color); margin-bottom: 20px;">
-                            <i class="fas fa-cogs"></i>
-                        </div>
-                        <h3>Étape en cours de développement</h3>
-                        <p>Les fonctionnalités avancées seront disponibles prochainement.</p>
-                        
-                        <!-- Champ factice pour éviter les erreurs -->
-                        <input type="hidden" name="audit_step_<?php echo $step; ?>" value="completed">
-                    </div>
-                </div>
             <?php endif; ?>
 
             <!-- Navigation moderne -->
