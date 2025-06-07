@@ -439,9 +439,6 @@ llxHeader("", "Audit Digital Professionnel");
 
         /* Échelle de notation 1-10 */
         .rating-scale {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin: 25px 0;
             padding: 20px;
             background: white;
@@ -453,20 +450,31 @@ llxHeader("", "Audit Digital Professionnel");
             display: flex;
             justify-content: space-between;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .scale-label {
-            font-size: 0.9rem;
-            color: #6c757d;
+            font-size: 0.85rem;
+            color: #495057;
             text-align: center;
             flex: 1;
+            padding: 0 8px;
+            font-weight: 500;
+        }
+
+        .scale-label small {
+            display: block;
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 3px;
+            font-weight: 400;
         }
 
         .scale-options {
             display: flex;
             justify-content: space-between;
             width: 100%;
+            margin-top: 10px;
         }
 
         .scale-option {
@@ -479,36 +487,42 @@ llxHeader("", "Audit Digital Professionnel");
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 1rem;
             cursor: pointer;
             transition: var(--transition);
             position: relative;
+            color: #495057;
         }
 
         .scale-option:hover {
             border-color: var(--secondary-color);
             transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
         }
 
         .scale-option.selected {
             background: var(--secondary-color);
             color: white;
             border-color: var(--secondary-color);
-            transform: scale(1.2);
+            transform: scale(1.15);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
         }
 
         .scale-option.selected::after {
             content: '✓';
             position: absolute;
-            top: -5px;
-            right: -5px;
+            top: -8px;
+            right: -8px;
             width: 20px;
             height: 20px;
             background: var(--success-color);
             border-radius: 50%;
-            font-size: 12px;
+            font-size: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
+            font-weight: bold;
         }
 
         /* Zone de commentaires */
