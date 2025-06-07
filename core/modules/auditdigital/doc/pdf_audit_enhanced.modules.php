@@ -13,16 +13,15 @@
  * \brief      Générateur PDF amélioré avec graphiques pour les audits
  */
 
-require_once DOL_DOCUMENT_ROOT.'/core/modules/auditdigital/modules_auditdigital.php';
-require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/commondocgenerator.class.php';
 
 /**
  * Classe pour générer les PDF d'audit avec graphiques
  */
-class pdf_audit_enhanced extends ModeleNumRefAudit
+class pdf_audit_enhanced extends CommonDocGenerator
 {
     /**
      * @var DoliDB Database handler

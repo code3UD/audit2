@@ -120,6 +120,12 @@ if ($action == 'create_audit') {
         // Score global pondéré sur 100
         $total_score = ($maturity_score * 0.30 + $security_score * 0.25 + $cloud_score * 0.25 + $automation_score * 0.20) * 10;
         
+        // Récupérer les commentaires et recommandations
+        $recommendations = $wizard_data['step_6']['audit_recommendations'] ?? '';
+        $action_plan = $wizard_data['step_6']['audit_action_plan'] ?? '';
+        $objectives = $wizard_data['step_6']['audit_objectives'] ?? '';
+        $general_comments = $wizard_data['step_6']['audit_general_comments'] ?? '';
+        
         // Validation des données obligatoires
         $fk_soc = $wizard_data['step_1']['audit_socid'] ?? 0;
         if (empty($fk_soc) || $fk_soc <= 0) {
@@ -150,6 +156,12 @@ if ($action == 'create_audit') {
         $audit->score_cloud = round($cloud_score * 10); // Convertir en pourcentage
         $audit->score_automatisation = round($automation_score * 10); // Convertir en pourcentage
         
+        // Sauvegarder les commentaires et recommandations
+        $audit->recommendations = $recommendations;
+        $audit->action_plan = $action_plan;
+        $audit->objectives = $objectives;
+        $audit->general_comments = $general_comments;
+        
         // Sauvegarder les réponses et commentaires en JSON
         $audit->json_responses = json_encode($wizard_data);
         
@@ -158,25 +170,34 @@ if ($action == 'create_audit') {
         if ($result > 0) {
             // Générer le PDF automatiquement
             try {
-                $pdf_path = DOL_DOCUMENT_ROOT.'/core/modules/auditdigital/doc/pdf_audit_enhanced.modules.php';
-                if (file_exists($pdf_path)) {
-                    require_once $pdf_path;
+                // Essayer plusieurs chemins possibles pour le générateur PDF
+                $pdf_paths = [
+                    DOL_DOCUMENT_ROOT.'/custom/auditdigital/core/modules/auditdigital/doc/pdf_audit_enhanced.modules.php',
+                    DOL_DOCUMENT_ROOT.'/core/modules/auditdigital/doc/pdf_audit_enhanced.modules.php',
+                    dirname(__FILE__).'/../core/modules/auditdigital/doc/pdf_audit_enhanced.modules.php'
+                ];
+                
+                $pdf_loaded = false;
+                foreach ($pdf_paths as $pdf_path) {
+                    if (file_exists($pdf_path)) {
+                        require_once $pdf_path;
+                        $pdf_loaded = true;
+                        break;
+                    }
+                }
+                
+                if ($pdf_loaded && class_exists('pdf_audit_enhanced')) {
+                    $pdf_generator = new pdf_audit_enhanced($db);
+                    $pdf_result = $pdf_generator->write_file($audit, $langs);
                     
-                    if (class_exists('pdf_audit_enhanced')) {
-                        $pdf_generator = new pdf_audit_enhanced($db);
-                        $pdf_result = $pdf_generator->write_file($audit, $langs);
-                        
-                        if ($pdf_result > 0) {
-                            // PDF généré avec succès
-                            setEventMessages('Audit créé avec succès. Rapport PDF généré automatiquement.', null, 'mesgs');
-                        } else {
-                            setEventMessages('Audit créé avec succès. Erreur lors de la génération du PDF.', null, 'warnings');
-                        }
+                    if ($pdf_result > 0) {
+                        // PDF généré avec succès
+                        setEventMessages('Audit créé avec succès. Rapport PDF généré automatiquement.', null, 'mesgs');
                     } else {
-                        setEventMessages('Audit créé avec succès. Générateur PDF non disponible.', null, 'warnings');
+                        setEventMessages('Audit créé avec succès. Erreur lors de la génération du PDF.', null, 'warnings');
                     }
                 } else {
-                    setEventMessages('Audit créé avec succès. Module PDF non installé.', null, 'warnings');
+                    setEventMessages('Audit créé avec succès. Générateur PDF non disponible (chemins testés: '.implode(', ', $pdf_paths).').', null, 'warnings');
                 }
             } catch (Exception $e) {
                 setEventMessages('Audit créé avec succès. PDF non disponible: '.$e->getMessage(), null, 'warnings');
@@ -1441,6 +1462,76 @@ llxHeader("", "Audit Digital Professionnel");
                                     <p>• Innover avec les technologies émergentes</p>
                                     <p>• Partager les bonnes pratiques</p>
                                 <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <!-- Section Commentaires et Recommandations -->
+                        <div style="margin-top: 40px; padding: 30px; background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <h4 style="color: #2c3e50; margin-bottom: 20px; display: flex; align-items: center;">
+                                <i class="fas fa-comments" style="margin-right: 10px; color: var(--primary-color);"></i>
+                                Commentaires et Recommandations
+                            </h4>
+                            
+                            <div style="margin-bottom: 25px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">
+                                    <i class="fas fa-lightbulb" style="margin-right: 5px; color: #ffc107;"></i>
+                                    Recommandations spécifiques pour votre organisation :
+                                </label>
+                                <textarea 
+                                    name="audit_recommendations" 
+                                    style="width: 100%; min-height: 120px; padding: 15px; border: 2px solid #e9ecef; border-radius: 8px; font-family: inherit; font-size: 14px; line-height: 1.5; resize: vertical;"
+                                    placeholder="Saisissez ici les recommandations personnalisées basées sur les résultats de l'audit..."
+                                ><?php echo isset($_SESSION['audit_wizard_data']['audit_recommendations']) ? htmlspecialchars($_SESSION['audit_wizard_data']['audit_recommendations']) : ''; ?></textarea>
+                            </div>
+                            
+                            <div style="margin-bottom: 25px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">
+                                    <i class="fas fa-road" style="margin-right: 5px; color: #17a2b8;"></i>
+                                    Plan d'action prioritaire (3-6 mois) :
+                                </label>
+                                <textarea 
+                                    name="audit_action_plan" 
+                                    style="width: 100%; min-height: 120px; padding: 15px; border: 2px solid #e9ecef; border-radius: 8px; font-family: inherit; font-size: 14px; line-height: 1.5; resize: vertical;"
+                                    placeholder="Définissez les actions prioritaires à mettre en œuvre dans les 3 à 6 prochains mois..."
+                                ><?php echo isset($_SESSION['audit_wizard_data']['audit_action_plan']) ? htmlspecialchars($_SESSION['audit_wizard_data']['audit_action_plan']) : ''; ?></textarea>
+                            </div>
+                            
+                            <div style="margin-bottom: 25px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">
+                                    <i class="fas fa-chart-line" style="margin-right: 5px; color: #28a745;"></i>
+                                    Objectifs de transformation digitale :
+                                </label>
+                                <textarea 
+                                    name="audit_objectives" 
+                                    style="width: 100%; min-height: 120px; padding: 15px; border: 2px solid #e9ecef; border-radius: 8px; font-family: inherit; font-size: 14px; line-height: 1.5; resize: vertical;"
+                                    placeholder="Décrivez les objectifs à long terme de votre transformation digitale..."
+                                ><?php echo isset($_SESSION['audit_wizard_data']['audit_objectives']) ? htmlspecialchars($_SESSION['audit_wizard_data']['audit_objectives']) : ''; ?></textarea>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">
+                                    <i class="fas fa-comment-dots" style="margin-right: 5px; color: #6f42c1;"></i>
+                                    Commentaires généraux :
+                                </label>
+                                <textarea 
+                                    name="audit_general_comments" 
+                                    style="width: 100%; min-height: 100px; padding: 15px; border: 2px solid #e9ecef; border-radius: 8px; font-family: inherit; font-size: 14px; line-height: 1.5; resize: vertical;"
+                                    placeholder="Ajoutez tout commentaire ou observation complémentaire..."
+                                ><?php echo isset($_SESSION['audit_wizard_data']['audit_general_comments']) ? htmlspecialchars($_SESSION['audit_wizard_data']['audit_general_comments']) : ''; ?></textarea>
+                            </div>
+                            
+                            <!-- Aide contextuelle -->
+                            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                                <h6 style="color: #2c3e50; margin-bottom: 10px;">
+                                    <i class="fas fa-info-circle" style="margin-right: 5px;"></i>
+                                    Conseils pour remplir cette section :
+                                </h6>
+                                <ul style="margin: 0; padding-left: 20px; color: #6c757d; font-size: 13px;">
+                                    <li>Soyez spécifique dans vos recommandations</li>
+                                    <li>Priorisez les actions selon leur impact et leur faisabilité</li>
+                                    <li>Définissez des objectifs mesurables et temporels</li>
+                                    <li>Prenez en compte les ressources disponibles</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
