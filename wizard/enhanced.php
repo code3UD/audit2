@@ -96,28 +96,29 @@ if ($action == 'create_audit') {
         // Récupérer toutes les données de la session
         $wizard_data = $_SESSION['audit_wizard_data'] ?? array();
         
-        // Calculer les scores avec la nouvelle échelle 1-10
+        // Calculer les scores avec la nouvelle échelle 1-10 (CORRIGÉ)
         $digital_level = $wizard_data['step_2']['audit_digital_level'] ?? 0;
         $web_presence = $wizard_data['step_2']['audit_web_presence'] ?? 0;
         $digital_tools = $wizard_data['step_2']['audit_digital_tools'] ?? 0;
-        $maturity_score = ($digital_level + $web_presence + $digital_tools) * 10 / 3; // Max 10
+        $maturity_score = ($digital_level + $web_presence + $digital_tools) / 3; // Moyenne sur 10
         
         $security_level = $wizard_data['step_3']['audit_security_level'] ?? 0;
         $rgpd_compliance = $wizard_data['step_3']['audit_rgpd_compliance'] ?? 0;
         $backup_strategy = $wizard_data['step_3']['audit_backup_strategy'] ?? 0;
-        $security_score = ($security_level + $rgpd_compliance + $backup_strategy) * 10 / 3; // Max 10
+        $security_score = ($security_level + $rgpd_compliance + $backup_strategy) / 3; // Moyenne sur 10
         
         $cloud_adoption = $wizard_data['step_4']['audit_cloud_adoption'] ?? 0;
         $mobility = $wizard_data['step_4']['audit_mobility'] ?? 0;
         $infrastructure = $wizard_data['step_4']['audit_infrastructure'] ?? 0;
-        $cloud_score = ($cloud_adoption + $mobility + $infrastructure) * 10 / 3; // Max 10
+        $cloud_score = ($cloud_adoption + $mobility + $infrastructure) / 3; // Moyenne sur 10
         
         $automation_level = $wizard_data['step_5']['audit_automation_level'] ?? 0;
         $collaboration_tools = $wizard_data['step_5']['audit_collaboration_tools'] ?? 0;
         $data_analysis = $wizard_data['step_5']['audit_data_analysis'] ?? 0;
-        $automation_score = ($automation_level + $collaboration_tools + $data_analysis) * 10 / 3; // Max 10
+        $automation_score = ($automation_level + $collaboration_tools + $data_analysis) / 3; // Moyenne sur 10
         
-        $total_score = ($maturity_score + $security_score + $cloud_score + $automation_score) * 2.5; // Max 100
+        // Score global pondéré sur 100
+        $total_score = ($maturity_score * 0.30 + $security_score * 0.25 + $cloud_score * 0.25 + $automation_score * 0.20) * 10;
         
         // Validation des données obligatoires
         $fk_soc = $wizard_data['step_1']['audit_socid'] ?? 0;
@@ -142,12 +143,12 @@ if ($action == 'create_audit') {
         $audit->audit_type = 'digital_maturity';
         $audit->status = 0; // Draft
         
-        // Sauvegarder les scores calculés
+        // Sauvegarder les scores calculés (CORRIGÉ)
         $audit->score_global = round($total_score);
-        $audit->score_maturite = round($maturity_score * 10);
-        $audit->score_cybersecurite = round($security_score * 10);
-        $audit->score_cloud = round($cloud_score * 10);
-        $audit->score_automatisation = round($automation_score * 10);
+        $audit->score_maturite = round($maturity_score * 10); // Convertir en pourcentage
+        $audit->score_cybersecurite = round($security_score * 10); // Convertir en pourcentage
+        $audit->score_cloud = round($cloud_score * 10); // Convertir en pourcentage
+        $audit->score_automatisation = round($automation_score * 10); // Convertir en pourcentage
         
         // Sauvegarder les réponses et commentaires en JSON
         $audit->json_responses = json_encode($wizard_data);
@@ -155,6 +156,32 @@ if ($action == 'create_audit') {
         $result = $audit->create($user);
         
         if ($result > 0) {
+            // Générer le PDF automatiquement
+            try {
+                $pdf_path = DOL_DOCUMENT_ROOT.'/core/modules/auditdigital/doc/pdf_audit_enhanced.modules.php';
+                if (file_exists($pdf_path)) {
+                    require_once $pdf_path;
+                    
+                    if (class_exists('pdf_audit_enhanced')) {
+                        $pdf_generator = new pdf_audit_enhanced($db);
+                        $pdf_result = $pdf_generator->write_file($audit, $langs);
+                        
+                        if ($pdf_result > 0) {
+                            // PDF généré avec succès
+                            setEventMessages('Audit créé avec succès. Rapport PDF généré automatiquement.', null, 'mesgs');
+                        } else {
+                            setEventMessages('Audit créé avec succès. Erreur lors de la génération du PDF.', null, 'warnings');
+                        }
+                    } else {
+                        setEventMessages('Audit créé avec succès. Générateur PDF non disponible.', null, 'warnings');
+                    }
+                } else {
+                    setEventMessages('Audit créé avec succès. Module PDF non installé.', null, 'warnings');
+                }
+            } catch (Exception $e) {
+                setEventMessages('Audit créé avec succès. PDF non disponible: '.$e->getMessage(), null, 'warnings');
+            }
+            
             // Nettoyer la session
             unset($_SESSION['audit_wizard_data']);
             
@@ -1308,31 +1335,32 @@ llxHeader("", "Audit Digital Professionnel");
                     $digital_level = $wizard_data['step_2']['audit_digital_level'] ?? 0;
                     $web_presence = $wizard_data['step_2']['audit_web_presence'] ?? 0;
                     $digital_tools = $wizard_data['step_2']['audit_digital_tools'] ?? 0;
-                    $maturity_score = ($digital_level + $web_presence + $digital_tools) * 10 / 3;
-                    $scores_detail['Maturité Digitale'] = $maturity_score;
+                    $maturity_score = ($digital_level + $web_presence + $digital_tools) / 3; // Moyenne sur 10
+                    $scores_detail['Maturité Digitale'] = round($maturity_score * 10); // Affichage en pourcentage
                     
                     // Étape 3: Cybersécurité (poids: 25%)
                     $security_level = $wizard_data['step_3']['audit_security_level'] ?? 0;
                     $rgpd_compliance = $wizard_data['step_3']['audit_rgpd_compliance'] ?? 0;
                     $backup_strategy = $wizard_data['step_3']['audit_backup_strategy'] ?? 0;
-                    $security_score = ($security_level + $rgpd_compliance + $backup_strategy) * 10 / 3;
-                    $scores_detail['Cybersécurité'] = $security_score;
+                    $security_score = ($security_level + $rgpd_compliance + $backup_strategy) / 3; // Moyenne sur 10
+                    $scores_detail['Cybersécurité'] = round($security_score * 10); // Affichage en pourcentage
                     
                     // Étape 4: Cloud & Infrastructure (poids: 25%)
                     $cloud_adoption = $wizard_data['step_4']['audit_cloud_adoption'] ?? 0;
                     $mobility = $wizard_data['step_4']['audit_mobility'] ?? 0;
                     $infrastructure = $wizard_data['step_4']['audit_infrastructure'] ?? 0;
-                    $cloud_score = ($cloud_adoption + $mobility + $infrastructure) * 10 / 3;
-                    $scores_detail['Cloud & Infrastructure'] = $cloud_score;
+                    $cloud_score = ($cloud_adoption + $mobility + $infrastructure) / 3; // Moyenne sur 10
+                    $scores_detail['Cloud & Infrastructure'] = round($cloud_score * 10); // Affichage en pourcentage
                     
                     // Étape 5: Automatisation (poids: 20%)
                     $automation_level = $wizard_data['step_5']['audit_automation_level'] ?? 0;
                     $collaboration_tools = $wizard_data['step_5']['audit_collaboration_tools'] ?? 0;
                     $data_analysis = $wizard_data['step_5']['audit_data_analysis'] ?? 0;
-                    $automation_score = ($automation_level + $collaboration_tools + $data_analysis) * 10 / 3;
-                    $scores_detail['Automatisation'] = $automation_score;
+                    $automation_score = ($automation_level + $collaboration_tools + $data_analysis) / 3; // Moyenne sur 10
+                    $scores_detail['Automatisation'] = round($automation_score * 10); // Affichage en pourcentage
                     
-                    $total_score = ($maturity_score + $security_score + $cloud_score + $automation_score) * 2.5;
+                    // Score global pondéré sur 100
+                    $total_score = ($maturity_score * 0.30 + $security_score * 0.25 + $cloud_score * 0.25 + $automation_score * 0.20) * 10;
                     
                     // Déterminer le niveau de maturité
                     $maturity_level = 'Débutant';
@@ -1599,10 +1627,9 @@ function showNotification(message, type = 'success') {
         max-width: 300px;
     `;
     
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i> 
-        ${message}
-    `;
+    notification.innerHTML = 
+        '<i class="fas fa-' + (type === 'success' ? 'check' : 'exclamation') + '-circle"></i> ' + 
+        message;
     
     document.body.appendChild(notification);
     
