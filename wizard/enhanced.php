@@ -119,11 +119,26 @@ if ($action == 'create_audit') {
         
         $total_score = ($maturity_score + $security_score + $cloud_score + $automation_score) * 2.5; // Max 100
         
+        // Validation des données obligatoires
+        $fk_soc = $wizard_data['step_1']['audit_socid'] ?? 0;
+        if (empty($fk_soc) || $fk_soc <= 0) {
+            setEventMessages('Erreur: Société obligatoire', null, 'errors');
+            header("Location: ".dol_buildpath('/auditdigital/wizard/enhanced.php', 1).'?step=1');
+            exit;
+        }
+        
+        $structure_type = $wizard_data['step_1']['audit_structure_type'] ?? '';
+        if (empty($structure_type)) {
+            setEventMessages('Erreur: Type de structure obligatoire', null, 'errors');
+            header("Location: ".dol_buildpath('/auditdigital/wizard/enhanced.php', 1).'?step=1');
+            exit;
+        }
+
         // Set properties from wizard data
         $audit->ref = 'AUDIT-'.date('YmdHis');
-        $audit->label = 'Audit Digital - '.$societe->name.' - '.date('d/m/Y');
-        $audit->fk_soc = $wizard_data['step_1']['audit_socid'] ?? 0;
-        $audit->structure_type = $wizard_data['step_1']['audit_structure_type'] ?? '';
+        $audit->label = 'Audit Digital - '.($societe ? $societe->name : 'Société').' - '.date('d/m/Y');
+        $audit->fk_soc = $fk_soc;
+        $audit->structure_type = $structure_type;
         $audit->audit_type = 'digital_maturity';
         $audit->status = 0; // Draft
         
@@ -897,6 +912,494 @@ llxHeader("", "Audit Digital Professionnel");
                             <label for="comment_digital_tools">Commentaires (optionnel) :</label>
                             <textarea name="comment_digital_tools" id="comment_digital_tools" class="comment-textarea" 
                                 placeholder="Listez vos outils métier (CRM, ERP, etc.), leur intégration, leur utilisation..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+            <?php elseif ($step == 3): ?>
+                <!-- Étape 3: Cybersécurité -->
+                <div class="step-container">
+                    <div class="step-header">
+                        <h2><i class="fas fa-shield-alt"></i> Cybersécurité</h2>
+                        <p>Évaluons votre niveau de protection et de sécurité informatique</p>
+                    </div>
+
+                    <!-- Question 1: Protection des données -->
+                    <div class="question-section">
+                        <div class="question-header">
+                            <div class="question-icon">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div class="question-title">
+                                <h3>Niveau de protection des données</h3>
+                                <p>Comment évaluez-vous votre niveau de sécurité informatique ?</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-scale">
+                            <div class="scale-labels">
+                                <div class="scale-label">Très faible<br><small>Pas de protection</small></div>
+                                <div class="scale-label">Faible<br><small>Antivirus basique</small></div>
+                                <div class="scale-label">Moyen<br><small>Firewall + antivirus</small></div>
+                                <div class="scale-label">Bon<br><small>Sécurité renforcée</small></div>
+                                <div class="scale-label">Excellent<br><small>Sécurité avancée</small></div>
+                            </div>
+                            <div class="scale-options">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                    <div class="scale-option" data-value="<?php echo $i; ?>" onclick="selectRating(this, 'audit_security_level')">
+                                        <?php echo $i; ?>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_security_level" id="audit_security_level" required>
+
+                        <div class="comment-section">
+                            <label for="comment_security_level">Commentaires (optionnel) :</label>
+                            <textarea name="comment_security_level" id="comment_security_level" class="comment-textarea" 
+                                placeholder="Décrivez vos mesures de sécurité, antivirus, firewall, politiques..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Question 2: Conformité RGPD -->
+                    <div class="question-section">
+                        <div class="question-header">
+                            <div class="question-icon">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <div class="question-title">
+                                <h3>Conformité RGPD</h3>
+                                <p>Où en êtes-vous dans votre mise en conformité RGPD ?</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-scale">
+                            <div class="scale-labels">
+                                <div class="scale-label">Très faible<br><small>Pas de démarche</small></div>
+                                <div class="scale-label">Faible<br><small>Sensibilisation</small></div>
+                                <div class="scale-label">Moyen<br><small>En cours</small></div>
+                                <div class="scale-label">Bon<br><small>Largement conforme</small></div>
+                                <div class="scale-label">Excellent<br><small>Totalement conforme</small></div>
+                            </div>
+                            <div class="scale-options">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                    <div class="scale-option" data-value="<?php echo $i; ?>" onclick="selectRating(this, 'audit_rgpd_compliance')">
+                                        <?php echo $i; ?>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_rgpd_compliance" id="audit_rgpd_compliance" required>
+
+                        <div class="comment-section">
+                            <label for="comment_rgpd_compliance">Commentaires (optionnel) :</label>
+                            <textarea name="comment_rgpd_compliance" id="comment_rgpd_compliance" class="comment-textarea" 
+                                placeholder="Décrivez votre démarche RGPD, registre des traitements, DPO..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Question 3: Stratégie de sauvegarde -->
+                    <div class="question-section">
+                        <div class="question-header">
+                            <div class="question-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="question-title">
+                                <h3>Stratégie de sauvegarde</h3>
+                                <p>Comment gérez-vous la sauvegarde de vos données ?</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-scale">
+                            <div class="scale-labels">
+                                <div class="scale-label">Très faible<br><small>Pas de sauvegarde</small></div>
+                                <div class="scale-label">Faible<br><small>Sauvegarde manuelle</small></div>
+                                <div class="scale-label">Moyen<br><small>Sauvegarde automatique</small></div>
+                                <div class="scale-label">Bon<br><small>Multi-supports</small></div>
+                                <div class="scale-label">Excellent<br><small>Stratégie complète</small></div>
+                            </div>
+                            <div class="scale-options">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                    <div class="scale-option" data-value="<?php echo $i; ?>" onclick="selectRating(this, 'audit_backup_strategy')">
+                                        <?php echo $i; ?>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_backup_strategy" id="audit_backup_strategy" required>
+
+                        <div class="comment-section">
+                            <label for="comment_backup_strategy">Commentaires (optionnel) :</label>
+                            <textarea name="comment_backup_strategy" id="comment_backup_strategy" class="comment-textarea" 
+                                placeholder="Décrivez votre stratégie de sauvegarde, fréquence, supports..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+            <?php elseif ($step == 4): ?>
+                <!-- Étape 4: Cloud & Infrastructure -->
+                <div class="step-container">
+                    <div class="step-header">
+                        <h2><i class="fas fa-cloud"></i> Cloud & Infrastructure</h2>
+                        <p>Évaluons votre infrastructure informatique et adoption du cloud</p>
+                    </div>
+
+                    <!-- Question 1: Adoption du cloud -->
+                    <div class="question-section">
+                        <div class="question-header">
+                            <div class="question-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="question-title">
+                                <h3>Niveau d'adoption du cloud</h3>
+                                <p>Dans quelle mesure utilisez-vous les technologies cloud ?</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-scale">
+                            <div class="scale-labels">
+                                <div class="scale-label">Très faible<br><small>Serveurs locaux</small></div>
+                                <div class="scale-label">Faible<br><small>Quelques services</small></div>
+                                <div class="scale-label">Moyen<br><small>Cloud hybride</small></div>
+                                <div class="scale-label">Bon<br><small>Largement cloud</small></div>
+                                <div class="scale-label">Excellent<br><small>Cloud natif</small></div>
+                            </div>
+                            <div class="scale-options">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                    <div class="scale-option" data-value="<?php echo $i; ?>" onclick="selectRating(this, 'audit_cloud_adoption')">
+                                        <?php echo $i; ?>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_cloud_adoption" id="audit_cloud_adoption" required>
+
+                        <div class="comment-section">
+                            <label for="comment_cloud_adoption">Commentaires (optionnel) :</label>
+                            <textarea name="comment_cloud_adoption" id="comment_cloud_adoption" class="comment-textarea" 
+                                placeholder="Décrivez vos services cloud, fournisseurs, stratégie..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Question 2: Mobilité et télétravail -->
+                    <div class="question-section">
+                        <div class="question-header">
+                            <div class="question-icon">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div class="question-title">
+                                <h3>Mobilité et télétravail</h3>
+                                <p>Comment gérez-vous la mobilité de vos équipes ?</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-scale">
+                            <div class="scale-labels">
+                                <div class="scale-label">Très faible<br><small>Travail sur site</small></div>
+                                <div class="scale-label">Faible<br><small>Accès limité</small></div>
+                                <div class="scale-label">Moyen<br><small>VPN occasionnel</small></div>
+                                <div class="scale-label">Bon<br><small>Mobilité fluide</small></div>
+                                <div class="scale-label">Excellent<br><small>Nomadisme complet</small></div>
+                            </div>
+                            <div class="scale-options">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                    <div class="scale-option" data-value="<?php echo $i; ?>" onclick="selectRating(this, 'audit_mobility')">
+                                        <?php echo $i; ?>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_mobility" id="audit_mobility" required>
+
+                        <div class="comment-section">
+                            <label for="comment_mobility">Commentaires (optionnel) :</label>
+                            <textarea name="comment_mobility" id="comment_mobility" class="comment-textarea" 
+                                placeholder="Décrivez vos outils de mobilité, VPN, applications mobiles..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Question 3: Infrastructure technique -->
+                    <div class="question-section">
+                        <div class="question-header">
+                            <div class="question-icon">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <div class="question-title">
+                                <h3>Qualité de l'infrastructure technique</h3>
+                                <p>Comment évaluez-vous votre infrastructure IT ?</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-scale">
+                            <div class="scale-labels">
+                                <div class="scale-label">Très faible<br><small>Infrastructure obsolète</small></div>
+                                <div class="scale-label">Faible<br><small>Matériel vieillissant</small></div>
+                                <div class="scale-label">Moyen<br><small>Infrastructure correcte</small></div>
+                                <div class="scale-label">Bon<br><small>Infrastructure moderne</small></div>
+                                <div class="scale-label">Excellent<br><small>Infrastructure optimale</small></div>
+                            </div>
+                            <div class="scale-options">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                    <div class="scale-option" data-value="<?php echo $i; ?>" onclick="selectRating(this, 'audit_infrastructure')">
+                                        <?php echo $i; ?>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_infrastructure" id="audit_infrastructure" required>
+
+                        <div class="comment-section">
+                            <label for="comment_infrastructure">Commentaires (optionnel) :</label>
+                            <textarea name="comment_infrastructure" id="comment_infrastructure" class="comment-textarea" 
+                                placeholder="Décrivez votre infrastructure, serveurs, réseau, maintenance..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+            <?php elseif ($step == 5): ?>
+                <!-- Étape 5: Automatisation -->
+                <div class="step-container">
+                    <div class="step-header">
+                        <h2><i class="fas fa-robot"></i> Automatisation</h2>
+                        <p>Évaluons votre niveau d'automatisation et d'optimisation des processus</p>
+                    </div>
+
+                    <!-- Question 1: Automatisation des processus -->
+                    <div class="question-section">
+                        <div class="question-header">
+                            <div class="question-icon">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <div class="question-title">
+                                <h3>Automatisation des processus métier</h3>
+                                <p>Dans quelle mesure vos processus sont-ils automatisés ?</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-scale">
+                            <div class="scale-labels">
+                                <div class="scale-label">Très faible<br><small>Tout manuel</small></div>
+                                <div class="scale-label">Faible<br><small>Quelques automatismes</small></div>
+                                <div class="scale-label">Moyen<br><small>Processus partiels</small></div>
+                                <div class="scale-label">Bon<br><small>Largement automatisé</small></div>
+                                <div class="scale-label">Excellent<br><small>IA et workflows</small></div>
+                            </div>
+                            <div class="scale-options">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                    <div class="scale-option" data-value="<?php echo $i; ?>" onclick="selectRating(this, 'audit_automation_level')">
+                                        <?php echo $i; ?>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_automation_level" id="audit_automation_level" required>
+
+                        <div class="comment-section">
+                            <label for="comment_automation_level">Commentaires (optionnel) :</label>
+                            <textarea name="comment_automation_level" id="comment_automation_level" class="comment-textarea" 
+                                placeholder="Décrivez vos processus automatisés, workflows, outils..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Question 2: Outils de collaboration -->
+                    <div class="question-section">
+                        <div class="question-header">
+                            <div class="question-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="question-title">
+                                <h3>Outils de collaboration</h3>
+                                <p>Comment évaluez-vous vos outils de travail collaboratif ?</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-scale">
+                            <div class="scale-labels">
+                                <div class="scale-label">Très faible<br><small>Email uniquement</small></div>
+                                <div class="scale-label">Faible<br><small>Outils basiques</small></div>
+                                <div class="scale-label">Moyen<br><small>Suite collaborative</small></div>
+                                <div class="scale-label">Bon<br><small>Outils intégrés</small></div>
+                                <div class="scale-label">Excellent<br><small>Écosystème complet</small></div>
+                            </div>
+                            <div class="scale-options">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                    <div class="scale-option" data-value="<?php echo $i; ?>" onclick="selectRating(this, 'audit_collaboration_tools')">
+                                        <?php echo $i; ?>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_collaboration_tools" id="audit_collaboration_tools" required>
+
+                        <div class="comment-section">
+                            <label for="comment_collaboration_tools">Commentaires (optionnel) :</label>
+                            <textarea name="comment_collaboration_tools" id="comment_collaboration_tools" class="comment-textarea" 
+                                placeholder="Décrivez vos outils de collaboration, chat, visio, partage..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Question 3: Analyse de données -->
+                    <div class="question-section">
+                        <div class="question-header">
+                            <div class="question-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="question-title">
+                                <h3>Analyse et exploitation des données</h3>
+                                <p>Comment exploitez-vous vos données pour optimiser votre activité ?</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-scale">
+                            <div class="scale-labels">
+                                <div class="scale-label">Très faible<br><small>Pas d'analyse</small></div>
+                                <div class="scale-label">Faible<br><small>Rapports basiques</small></div>
+                                <div class="scale-label">Moyen<br><small>Tableaux de bord</small></div>
+                                <div class="scale-label">Bon<br><small>Analytics avancés</small></div>
+                                <div class="scale-label">Excellent<br><small>BI et prédictif</small></div>
+                            </div>
+                            <div class="scale-options">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                    <div class="scale-option" data-value="<?php echo $i; ?>" onclick="selectRating(this, 'audit_data_analysis')">
+                                        <?php echo $i; ?>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <input type="hidden" name="audit_data_analysis" id="audit_data_analysis" required>
+
+                        <div class="comment-section">
+                            <label for="comment_data_analysis">Commentaires (optionnel) :</label>
+                            <textarea name="comment_data_analysis" id="comment_data_analysis" class="comment-textarea" 
+                                placeholder="Décrivez vos outils d'analyse, KPI, tableaux de bord..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+            <?php elseif ($step == 6): ?>
+                <!-- Étape 6: Synthèse -->
+                <div class="step-container">
+                    <div class="step-header">
+                        <h2><i class="fas fa-chart-line"></i> Synthèse & Recommandations</h2>
+                        <p>Voici le résumé de votre audit digital</p>
+                    </div>
+
+                    <?php
+                    // Calculer le score basé sur les données de session
+                    $wizard_data = $_SESSION['audit_wizard_data'] ?? array();
+                    $total_score = 0;
+                    $scores_detail = array();
+                    
+                    // Étape 2: Maturité Digitale (poids: 30%)
+                    $digital_level = $wizard_data['step_2']['audit_digital_level'] ?? 0;
+                    $web_presence = $wizard_data['step_2']['audit_web_presence'] ?? 0;
+                    $digital_tools = $wizard_data['step_2']['audit_digital_tools'] ?? 0;
+                    $maturity_score = ($digital_level + $web_presence + $digital_tools) * 10 / 3;
+                    $scores_detail['Maturité Digitale'] = $maturity_score;
+                    
+                    // Étape 3: Cybersécurité (poids: 25%)
+                    $security_level = $wizard_data['step_3']['audit_security_level'] ?? 0;
+                    $rgpd_compliance = $wizard_data['step_3']['audit_rgpd_compliance'] ?? 0;
+                    $backup_strategy = $wizard_data['step_3']['audit_backup_strategy'] ?? 0;
+                    $security_score = ($security_level + $rgpd_compliance + $backup_strategy) * 10 / 3;
+                    $scores_detail['Cybersécurité'] = $security_score;
+                    
+                    // Étape 4: Cloud & Infrastructure (poids: 25%)
+                    $cloud_adoption = $wizard_data['step_4']['audit_cloud_adoption'] ?? 0;
+                    $mobility = $wizard_data['step_4']['audit_mobility'] ?? 0;
+                    $infrastructure = $wizard_data['step_4']['audit_infrastructure'] ?? 0;
+                    $cloud_score = ($cloud_adoption + $mobility + $infrastructure) * 10 / 3;
+                    $scores_detail['Cloud & Infrastructure'] = $cloud_score;
+                    
+                    // Étape 5: Automatisation (poids: 20%)
+                    $automation_level = $wizard_data['step_5']['audit_automation_level'] ?? 0;
+                    $collaboration_tools = $wizard_data['step_5']['audit_collaboration_tools'] ?? 0;
+                    $data_analysis = $wizard_data['step_5']['audit_data_analysis'] ?? 0;
+                    $automation_score = ($automation_level + $collaboration_tools + $data_analysis) * 10 / 3;
+                    $scores_detail['Automatisation'] = $automation_score;
+                    
+                    $total_score = ($maturity_score + $security_score + $cloud_score + $automation_score) * 2.5;
+                    
+                    // Déterminer le niveau de maturité
+                    $maturity_level = 'Débutant';
+                    $maturity_color = '#dc3545';
+                    $maturity_icon = 'fa-seedling';
+                    
+                    if ($total_score >= 80) {
+                        $maturity_level = 'Expert';
+                        $maturity_color = '#28a745';
+                        $maturity_icon = 'fa-trophy';
+                    } elseif ($total_score >= 60) {
+                        $maturity_level = 'Avancé';
+                        $maturity_color = '#17a2b8';
+                        $maturity_icon = 'fa-rocket';
+                    } elseif ($total_score >= 40) {
+                        $maturity_level = 'Intermédiaire';
+                        $maturity_color = '#ffc107';
+                        $maturity_icon = 'fa-chart-line';
+                    }
+                    ?>
+
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 4rem; color: <?php echo $maturity_color; ?>; margin-bottom: 20px;">
+                            <i class="fas <?php echo $maturity_icon; ?>"></i>
+                        </div>
+                        <h3>Audit Digital Complété !</h3>
+                        <p>Votre évaluation de maturité digitale est prête.</p>
+                        
+                        <div style="margin: 30px 0; padding: 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <h4 style="font-size: 1.8rem; margin-bottom: 15px;">
+                                Score global : <span style="color: <?php echo $maturity_color; ?>; font-weight: bold;"><?php echo round($total_score); ?>/100</span>
+                            </h4>
+                            <p style="font-size: 1.2rem; margin-bottom: 20px;">
+                                Niveau de maturité : <strong style="color: <?php echo $maturity_color; ?>;"><?php echo $maturity_level; ?></strong>
+                            </p>
+                            
+                            <!-- Barre de progression -->
+                            <div style="background: #e9ecef; border-radius: 10px; height: 20px; margin: 20px 0; overflow: hidden;">
+                                <div style="background: <?php echo $maturity_color; ?>; height: 100%; width: <?php echo min($total_score, 100); ?>%; transition: width 0.8s ease-in-out; border-radius: 10px;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Détail des scores par domaine -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
+                            <?php foreach ($scores_detail as $domain => $score): ?>
+                                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                    <h5 style="margin-bottom: 10px; color: #2c3e50;"><?php echo $domain; ?></h5>
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">
+                                        <?php echo round($score); ?>/100
+                                    </div>
+                                    <div style="background: #e9ecef; border-radius: 5px; height: 8px; margin-top: 10px; overflow: hidden;">
+                                        <div style="background: var(--primary-color); height: 100%; width: <?php echo min($score, 100); ?>%; border-radius: 5px;"></div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        
+                        <!-- Recommandations rapides -->
+                        <div style="margin-top: 40px; padding: 25px; background: #fff3cd; border-radius: 12px; border-left: 5px solid #ffc107;">
+                            <h5 style="color: #856404; margin-bottom: 15px;">
+                                <i class="fas fa-lightbulb"></i> Recommandations prioritaires
+                            </h5>
+                            <div style="text-align: left; color: #856404;">
+                                <?php if ($total_score < 40): ?>
+                                    <p>• Commencer par digitaliser les processus de base</p>
+                                    <p>• Mettre en place une politique de sécurité informatique</p>
+                                    <p>• Former les équipes aux outils numériques</p>
+                                <?php elseif ($total_score < 60): ?>
+                                    <p>• Optimiser les processus digitaux existants</p>
+                                    <p>• Renforcer la sécurité et la conformité RGPD</p>
+                                    <p>• Explorer les solutions cloud</p>
+                                <?php elseif ($total_score < 80): ?>
+                                    <p>• Automatiser davantage de processus</p>
+                                    <p>• Implémenter des solutions d'intelligence artificielle</p>
+                                    <p>• Développer l'écosystème digital</p>
+                                <?php else: ?>
+                                    <p>• Maintenir l'excellence opérationnelle</p>
+                                    <p>• Innover avec les technologies émergentes</p>
+                                    <p>• Partager les bonnes pratiques</p>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
