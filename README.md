@@ -1,6 +1,6 @@
-# 🚀 AuditDigital Moderne - Module Dolibarr Premium
+# 🚀 AuditDigital - Module Dolibarr Premium
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/updigit/auditdigital-modern)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/code3UD/audit2)
 [![Dolibarr](https://img.shields.io/badge/dolibarr-13.0%2B-green.svg)](https://www.dolibarr.org)
 [![PHP](https://img.shields.io/badge/php-7.4%2B-purple.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-GPL--3.0-red.svg)](LICENSE)
@@ -52,11 +52,11 @@
 
 ```bash
 # 1. Cloner le dépôt
-git clone https://github.com/updigit/auditdigital-moderne.git
-cd auditdigital-moderne
+git clone https://github.com/code3UD/audit2.git
+cd audit2
 
 # 2. Déploiement automatique
-./deploy.sh -e prod -b -d /var/www/dolibarr
+./deploy_git.sh
 
 # 3. Installation des fonctionnalités (via navigateur)
 # Accéder à : https://votre-dolibarr.com/custom/auditdigital/install_modern_features.php
@@ -265,20 +265,15 @@ Envoyez un email à : security@updigit.fr
 ## 📞 Support
 
 ### Documentation
-- 📖 **Guide utilisateur** : [docs/GUIDE_UTILISATEUR.md](docs/GUIDE_UTILISATEUR.md)
+- 📖 **Guide utilisateur** : [docs/DOCUMENTATION_UTILISATEUR.md](docs/DOCUMENTATION_UTILISATEUR.md)
 - 🔧 **Documentation technique** : [docs/DOCUMENTATION_TECHNIQUE.md](docs/DOCUMENTATION_TECHNIQUE.md)
 - 🎯 **Guide modernisation** : [docs/MODERNISATION_COMPLETE.md](docs/MODERNISATION_COMPLETE.md)
+- 🚀 **Guide de déploiement** : [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)
+- 📚 **Index complet** : [docs/README.md](docs/README.md)
 
 ### Contact
-- 📧 **Email** : support@updigit.fr
-- 📞 **Téléphone** : +33 1 23 45 67 89
-- 💬 **Chat** : Disponible 9h-18h (CET)
-- 🌐 **Site web** : https://updigit.fr
-
-### Communauté
-- 💬 **Forum** : https://community.updigit.fr
-- 🐛 **Issues** : https://github.com/updigit/auditdigital-moderne/issues
-- 📺 **Tutoriels** : https://youtube.com/updigit
+- 🐛 **Issues** : [GitHub Issues](https://github.com/code3UD/audit2/issues)
+- 📧 **Email** : support@code3ud.com
 
 ## 📄 Licence
 
@@ -295,8 +290,8 @@ Ce projet est sous licence **GPL-3.0** - voir le fichier [LICENSE](LICENSE) pour
 
 <div align="center">
 
-**Développé avec ❤️ par [Up Digit Agency](https://updigit.fr)**
+**Développé avec ❤️ par Code3UD**
 
-*Votre partenaire pour la transformation digitale*
+*Solutions digitales innovantes*
 
 </div>
